@@ -1,10 +1,30 @@
 import { Link, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { isUnauthorizedError } from "@/lib/authUtils";
+import { useState } from "react";
 import { 
   Home, 
   List, 
@@ -13,7 +33,9 @@ import {
   Users, 
   Plus, 
   Settings,
-  LogOut 
+  LogOut,
+  MoreVertical,
+  Trash2 
 } from "lucide-react";
 
 interface Feed {
@@ -35,6 +57,9 @@ export function Sidebar({ onAddFeed, onCreateCollection }: {
 }) {
   const [location] = useLocation();
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [feedToDelete, setFeedToDelete] = useState<Feed | null>(null);
 
   const { data: feeds = [] } = useQuery<Feed[]>({
     queryKey: ["/api/feeds"],
@@ -43,6 +68,51 @@ export function Sidebar({ onAddFeed, onCreateCollection }: {
   const { data: collections = [] } = useQuery<Collection[]>({
     queryKey: ["/api/collections"],
   });
+
+  const deleteFeedMutation = useMutation({
+    mutationFn: async (feedId: number) => {
+      await apiRequest("DELETE", `/api/feeds/${feedId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Feed deleted",
+        description: "RSS feed has been successfully deleted.",
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/feeds"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/articles"] });
+      setFeedToDelete(null);
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete RSS feed. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteFeed = (feed: Feed) => {
+    setFeedToDelete(feed);
+  };
+
+  const confirmDelete = () => {
+    if (feedToDelete) {
+      deleteFeedMutation.mutate(feedToDelete.id);
+    }
+  };
 
   const isActive = (path: string) => location === path;
 
@@ -111,16 +181,39 @@ export function Sidebar({ onAddFeed, onCreateCollection }: {
             
             <div className="space-y-1">
               {feeds.map((feed) => (
-                <Link key={feed.id} href={`/feeds/${feed.id}`}>
-                  <Button
-                    variant={isActive(`/feeds/${feed.id}`) ? "secondary" : "ghost"}
-                    className="w-full justify-start text-sm"
-                  >
-                    <div className={`w-3 h-3 rounded-full mr-3 ${feed.active ? 'bg-green-500' : 'bg-gray-400'}`} />
-                    <span className="truncate">{feed.title}</span>
-                    <Badge variant="secondary" className="ml-auto text-xs">12</Badge>
-                  </Button>
-                </Link>
+                <div key={feed.id} className="flex items-center group">
+                  <Link href={`/feeds/${feed.id}`} className="flex-1">
+                    <Button
+                      variant={isActive(`/feeds/${feed.id}`) ? "secondary" : "ghost"}
+                      className="w-full justify-start text-sm"
+                    >
+                      <div className={`w-3 h-3 rounded-full mr-3 ${feed.active ? 'bg-green-500' : 'bg-gray-400'}`} />
+                      <span className="truncate">{feed.title}</span>
+                      <Badge variant="secondary" className="ml-auto text-xs">12</Badge>
+                    </Button>
+                  </Link>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        className="text-destructive"
+                        onClick={() => handleDeleteFeed(feed)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete Feed
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               ))}
             </div>
           </div>
@@ -192,6 +285,28 @@ export function Sidebar({ onAddFeed, onCreateCollection }: {
           Sign Out
         </Button>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!feedToDelete} onOpenChange={() => setFeedToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete RSS Feed</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{feedToDelete?.title}"? This action cannot be undone and will remove all articles from this feed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteFeedMutation.isPending}
+            >
+              {deleteFeedMutation.isPending ? "Deleting..." : "Delete Feed"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </aside>
   );
 }
