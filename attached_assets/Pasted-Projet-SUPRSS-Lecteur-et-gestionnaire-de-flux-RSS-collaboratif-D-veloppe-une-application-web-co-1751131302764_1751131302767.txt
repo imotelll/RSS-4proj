@@ -1,0 +1,71 @@
+Projet : SUPRSS - Lecteur et gestionnaire de flux RSS collaboratif
+
+Développe une application web complète appelée SUPRSS, destinée à la société InfoFlux Pro, qui permet aux utilisateurs de s’abonner, consulter, organiser et partager des flux RSS.
+
+Fonctionnalités principales attendues :
+Authentification : Système de connexion classique + prise en charge OAuth2 (Google, Microsoft, GitHub…)
+
+Gestion des utilisateurs : Chaque utilisateur possède ses abonnements personnels et peut gérer ses préférences (ex : mode sombre, taille de police, changement de mot de passe).
+
+Collections partagées :
+
+Un utilisateur peut créer une collection de flux RSS, inviter d’autres membres à la rejoindre, gérer les droits de lecture, d’ajout de flux, de commentaire.
+
+Page dédiée à chaque collection (affichage des articles, liste des membres, permissions visibles).
+
+Gestion de flux RSS :
+
+Ajout, modification, suppression d’un flux (titre, URL, description, tags, statut actif/inactif, fréquence de mise à jour).
+
+Récupération automatique des articles de chaque flux (titre, lien, date, auteur, extrait/résumé…).
+
+Stockage des articles en base (garantie de persistance).
+
+Possibilité de marquer les articles comme lus/non lus, favoris.
+
+Recherche & filtrage :
+
+Recherche plein texte, filtrage par source, tags, statut de lecture, favoris.
+
+Import/export :
+
+Importer et exporter des listes de flux RSS via fichiers OPML, JSON ou CSV.
+
+Messagerie interne & commentaires :
+
+Chat instantané dans chaque collection partagée (messagerie temps réel).
+
+Possibilité de commenter chaque article.
+
+Déploiement Docker :
+
+Fournir un fichier docker-compose.yml pour lancer le backend (API REST ou GraphQL), le frontend web, et la base de données (PostgreSQL de préférence).
+
+Contraintes techniques :
+Frontend : React.js (moderne, responsive, UI claire et agréable, mode sombre inclus).
+
+Backend : Node.js (Express), API RESTful, utilisation de rss-parser pour gérer les flux RSS.
+
+Base de données : PostgreSQL.
+
+Temps réel : Utilisation de Socket.io pour la messagerie.
+
+Respecter l’architecture 3-tiers (aucune logique métier côté client, tout passe par l’API).
+
+Charte graphique souhaitée :
+Moderne, claire, ergonomique, facilement déclinable en dark mode.
+
+Sidebar avec navigation entre abonnements, collections, favoris, etc.
+
+Liste d’articles agréable à lire, boutons d’action visibles.
+
+Livrables attendus :
+Code source du backend et du frontend
+
+Fichier docker-compose.yml fonctionnel
+
+README clair pour lancer le projet
+
+Exemple de flux RSS à utiliser pour les tests
+
+Indique-moi si tu as besoin de précisions sur une fonctionnalité !
