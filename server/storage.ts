@@ -111,6 +111,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteFeed(id: number): Promise<void> {
+    // First delete all articles associated with this feed
+    await db.delete(articles).where(eq(articles.feedId, id));
+    
+    // Then delete the feed itself
     await db.delete(feeds).where(eq(feeds.id, id));
   }
 

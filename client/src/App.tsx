@@ -9,6 +9,8 @@ import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
 import Dashboard from "@/pages/Dashboard";
 import Collection from "@/pages/Collection";
+import Favorites from "@/pages/Favorites";
+import Articles from "@/pages/Articles";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -20,6 +22,8 @@ function Router() {
       ) : (
         <>
           <Route path="/" component={Dashboard} />
+          <Route path="/articles" component={Articles} />
+          <Route path="/favorites" component={Favorites} />
           <Route path="/collections/:id" component={Collection} />
         </>
       )}
