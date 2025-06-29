@@ -67,5 +67,3 @@ Fichier docker-compose.yml fonctionnel
 README clair pour lancer le projet
 
 Exemple de flux RSS à utiliser pour les tests
-
-Indique-moi si tu as besoin de précisions sur une fonctionnalité !
