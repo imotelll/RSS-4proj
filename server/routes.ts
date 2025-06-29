@@ -10,6 +10,11 @@ import { z } from "zod";
 let wsService: WebSocketService;
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check endpoint for Docker
+  app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
   // Auth middleware
   await setupAuth(app);
 

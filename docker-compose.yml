@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: suprss
+      POSTGRES_PASSWORD: suprsspass
+      POSTGRES_DB: suprssdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U suprss -d suprssdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://suprss:suprsspass@db:5432/suprssdb
+      - SESSION_SECRET=your-session-secret-key-here
+      - REPL_ID=your-repl-id
+      - REPLIT_DOMAINS=localhost:5000
+      - ISSUER_URL=https://replit.com/oidc
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    ports:
+      - "4173:4173"
+    environment:
+      - VITE_API_URL=http://server:5000
+    depends_on:
+      server:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

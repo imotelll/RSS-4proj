@@ -117,10 +117,12 @@ SUPRSS is a modern, collaborative RSS reader web application built for InfoFlux 
 - **Session Storage**: PostgreSQL-backed session management
 
 ### Docker Support
-- Ready for containerization with docker-compose.yml
-- Separate containers for frontend, backend, and database
-- Environment variable configuration for different stages
-- Health checks and service dependencies configured
+- Complete Docker Compose configuration with multi-container setup
+- Backend containerized with Node.js/TypeScript (port 5000)
+- Frontend containerized with Nginx serving built React app (port 4173)
+- PostgreSQL database container with persistent volumes (port 5432)
+- Health checks and proper service dependencies
+- Environment variable configuration for production deployment
 
 ### Scalability Considerations
 - Stateless backend design for horizontal scaling
@@ -132,6 +134,12 @@ SUPRSS is a modern, collaborative RSS reader web application built for InfoFlux 
 
 Changelog:
 - June 28, 2025. Initial setup
+- June 29, 2025. Added Docker Compose configuration with multi-container setup
+  - Created docker-compose.yml with PostgreSQL, backend, and frontend services
+  - Added Dockerfiles for server (Node.js/TypeScript) and client (Nginx)
+  - Implemented health checks and service dependencies
+  - Added environment configuration files and documentation
+  - Fixed RSS feed deletion constraint issues
 
 ## User Preferences
 

@@ -1,0 +1,18 @@
+# Environment variables pour Docker
+# Copiez ce fichier vers .env.docker et configurez les valeurs
+
+# Base de données PostgreSQL
+POSTGRES_USER=suprss
+POSTGRES_PASSWORD=suprsspass
+POSTGRES_DB=suprssdb
+DATABASE_URL=postgresql://suprss:suprsspass@db:5432/suprssdb
+
+# Configuration serveur
+NODE_ENV=production
+SESSION_SECRET=your-very-secure-session-secret-here-change-this
+REPL_ID=your-repl-id-from-replit
+REPLIT_DOMAINS=localhost:4173
+ISSUER_URL=https://replit.com/oidc
+
+# Configuration client
+VITE_API_URL=http://localhost:5000
