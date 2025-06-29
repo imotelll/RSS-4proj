@@ -19,6 +19,7 @@ SUPRSS is a modern, collaborative RSS reader web application built for InfoFlux 
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js
 - **Language**: TypeScript with ES modules
+- **Environment**: dotenv for environment variable management
 - **API Design**: RESTful API with structured error handling
 - **Real-time Communication**: WebSocket implementation for live messaging
 - **RSS Processing**: Custom RSS parser supporting RSS 2.0 and Atom formats
@@ -140,6 +141,12 @@ Changelog:
   - Implemented health checks and service dependencies
   - Added environment configuration files and documentation
   - Fixed RSS feed deletion constraint issues
+- June 29, 2025. Migrated from .replit to standard .env configuration
+  - Added dotenv package and configuration loading in server
+  - Created .env.example template with all required variables
+  - Updated .gitignore to exclude environment files
+  - Added comprehensive environment documentation
+  - Server now uses PORT from environment variables
 
 ## User Preferences
 
