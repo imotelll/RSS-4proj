@@ -34,7 +34,10 @@ echo "🐳 Lancement des conteneurs..."
 docker-compose up -d --build
 
 echo "⏳ Attendre le démarrage des services..."
-sleep 10
+sleep 30
+
+echo "📊 Statut des conteneurs:"
+docker-compose ps
 
 # Tests des services
 echo ""

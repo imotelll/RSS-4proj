@@ -27,12 +27,25 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Create nginx config for SPA
 RUN echo 'server { \
-    listen 4173; \
+    listen 4173 default_server; \
+    listen [::]:4173 default_server; \
+    server_name _; \
+    \
     location / { \
         root /usr/share/nginx/html; \
         index index.html index.htm; \
         try_files $uri $uri/ /index.html; \
+        \
+        # CORS headers for development \
+        add_header Access-Control-Allow-Origin "*" always; \
+        add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS" always; \
+        add_header Access-Control-Allow-Headers "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization" always; \
+        \
+        if ($request_method = OPTIONS) { \
+            return 204; \
+        } \
     } \
+    \
     location /api/ { \
         proxy_pass http://server:5000; \
         proxy_set_header Host $host; \
@@ -40,6 +53,7 @@ RUN echo 'server { \
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
         proxy_set_header X-Forwarded-Proto $scheme; \
     } \
+    \
     location /ws { \
         proxy_pass http://server:5000; \
         proxy_http_version 1.1; \

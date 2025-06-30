@@ -2,16 +2,14 @@
 
 echo "🚀 Starting SUPRSS Server..."
 
-# Wait for database to be ready
+# Wait for database to be ready with simple pg_isready
 echo "⏳ Waiting for database connection..."
-until npx tsx -e "
-import { Pool } from '@neondatabase/serverless';
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-pool.query('SELECT 1').then(() => { console.log('Database ready!'); process.exit(0); }).catch(() => process.exit(1));
-" 2>/dev/null; do
+until pg_isready -h "${PGHOST:-db}" -p "${PGPORT:-5432}" -U "${PGUSER:-suprss}" -d "${PGDATABASE:-suprssdb}" 2>/dev/null; do
   echo "💤 Database not ready, waiting 2 seconds..."
   sleep 2
 done
+
+echo "✅ Database is ready!"
 
 echo "📊 Running database migrations..."
 npx drizzle-kit push --verbose

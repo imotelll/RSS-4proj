@@ -17,6 +17,12 @@ cd RSS-Project
 
 # Lancer l'application complète
 docker-compose up --build
+
+# Ou en mode détaché (arrière-plan)
+docker-compose up -d --build
+
+# Pour suivre les logs en temps réel
+docker-compose logs -f
 ```
 
 ### Accès à l'application
@@ -65,7 +71,7 @@ docker-compose down
 docker-compose down -v
 ```
 
-### Logs
+### Debugging et Logs
 
 ```bash
 # Voir tous les logs
@@ -75,7 +81,36 @@ docker-compose logs
 docker-compose logs server
 docker-compose logs client
 docker-compose logs db
+
+# Suivre les logs en temps réel
+docker-compose logs -f server
+
+# Vérifier le statut des conteneurs
+docker-compose ps
+
+# Entrer dans un conteneur pour debugging
+docker-compose exec server sh
+docker-compose exec db psql -U suprss -d suprssdb
 ```
+
+### Résolution de problèmes
+
+**Conteneurs qui s'arrêtent immédiatement :**
+1. Vérifiez les logs : `docker-compose logs`
+2. Vérifiez le fichier .env : `cat .env`
+3. Redémarrez proprement : `docker-compose down && docker-compose up --build`
+
+**Base de données (ExitCode 128) :**
+```bash
+# Supprimer les volumes et redémarrer
+docker-compose down -v
+docker-compose up --build
+```
+
+**Interface non accessible :**
+- Vérifiez que les ports sont libres : `ss -tulpn | grep -E "(4173|5000|5432)"`
+- Testez l'accès local : `curl http://localhost:4173`
+- Accès réseau : `http://<IP-machine>:4173`
 
 ### Développement local
 

@@ -2,15 +2,15 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Install curl for health checks
-RUN apk add --no-cache curl
+# Install curl and postgresql-client for health checks and database connectivity
+RUN apk add --no-cache curl postgresql-client
 
 # Copy package files
 COPY package*.json ./
 COPY tsconfig.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies (include dev dependencies for tsx and drizzle-kit)
+RUN npm ci
 
 # Copy only backend related files
 COPY server/ ./server/

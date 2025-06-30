@@ -1,105 +1,111 @@
 # Configuration des Variables d'Environnement - SUPRSS
 
-## Vue d'ensemble
+## Fichier .env Principal
 
-L'application SUPRSS utilise maintenant un fichier `.env` standard pour la configuration des variables d'environnement, remplaçant la configuration `.replit`.
+Le projet utilise un fichier `.env` pour centraliser toute la configuration. Copiez `.env.example` vers `.env` et adaptez selon vos besoins.
 
-## Configuration Locale
-
-### 1. Créer le fichier .env
-
-Copiez le fichier d'exemple et configurez les valeurs :
+### Variables Requises
 
 ```bash
-cp .env.example .env
-```
-
-### 2. Variables Requises
-
-Éditez le fichier `.env` avec vos valeurs :
-
-```env
-# Configuration Serveur
-NODE_ENV=development
+# Configuration serveur
+NODE_ENV=production
 PORT=5000
 
-# Configuration Base de Données
-DATABASE_URL=postgresql://username:password@host:port/database
-PGHOST=localhost
+# Base de données PostgreSQL
+DATABASE_URL=postgresql://suprss:suprsspass@db:5432/suprssdb
+PGHOST=db
 PGPORT=5432
-PGUSER=votre_utilisateur
-PGPASSWORD=votre_mot_de_passe
-PGDATABASE=votre_base
+PGUSER=suprss
+PGPASSWORD=suprsspass
+PGDATABASE=suprssdb
 
-# Configuration Authentification
-SESSION_SECRET=votre-clé-secrète-très-sécurisée
-REPL_ID=votre-repl-id-de-replit
-REPLIT_DOMAINS=localhost:5000,votre-domaine.com
+# Authentication (sécurité)
+SESSION_SECRET=changez-cette-clé-secrète-en-production
+REPL_ID=votre-repl-id
+REPLIT_DOMAINS=localhost:4173,0.0.0.0:4173,localhost:5000,0.0.0.0:5000
 ISSUER_URL=https://replit.com/oidc
 
-# Configuration Frontend
+# Frontend
 VITE_API_URL=http://localhost:5000
 ```
 
-## Variables d'Environnement Détaillées
+## Configuration Docker
 
-### Configuration Serveur
-- `NODE_ENV` : Mode d'exécution (`development`, `production`)
-- `PORT` : Port d'écoute du serveur (défaut: 5000)
+### docker-compose.yml utilise .env
 
-### Configuration Base de Données
-- `DATABASE_URL` : URL complète de connexion PostgreSQL
-- `PGHOST` : Hôte de la base de données
-- `PGPORT` : Port de la base de données (défaut: 5432)
-- `PGUSER` : Nom d'utilisateur de la base
-- `PGPASSWORD` : Mot de passe de la base
-- `PGDATABASE` : Nom de la base de données
+Le fichier docker-compose.yml lit automatiquement le fichier `.env` et utilise les variables avec la syntaxe `${VARIABLE}`.
 
-### Configuration Authentification
-- `SESSION_SECRET` : Clé secrète pour les sessions (doit être unique et sécurisée)
-- `REPL_ID` : Identifiant Repl pour l'authentification OAuth
-- `REPLIT_DOMAINS` : Domaines autorisés (séparés par des virgules)
-- `ISSUER_URL` : URL du fournisseur OAuth (Replit)
+### Réseau et Ports
 
-### Configuration Frontend
-- `VITE_API_URL` : URL de l'API backend pour les builds de production
+- **Base de données** : Port 5432 (PostgreSQL)
+- **Backend API** : Port 5000 (Node.js/Express)
+- **Frontend** : Port 4173 (Nginx)
+
+### Accès réseau local
+
+L'interface est accessible depuis :
+- Local : `http://localhost:4173`
+- Réseau : `http://<IP-machine>:4173`
 
 ## Sécurité
 
-⚠️ **Important** : 
-- Le fichier `.env` est ignoré par Git et ne doit **jamais** être versionné
-- Utilisez des valeurs sécurisées pour `SESSION_SECRET`
-- Ne partagez jamais vos variables d'environnement sensibles
+### Variables sensibles à changer
 
-## Développement vs Production
+1. **SESSION_SECRET** : Clé de 32+ caractères aléatoires
+2. **PGPASSWORD** : Mot de passe PostgreSQL fort
+3. **REPL_ID** : Identifiant unique pour l'authentification
 
-### Développement
-```env
+### Exemple de génération de secrets
+
+```bash
+# Générer un secret de session
+openssl rand -hex 32
+
+# Ou avec Node.js
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+## Troubleshooting
+
+### Problèmes courants
+
+1. **Variables non chargées**
+   - Vérifiez que le fichier `.env` est à la racine
+   - Pas d'espaces autour du `=`
+   - Pas de quotes inutiles
+
+2. **Connexion base de données**
+   - Vérifiez `DATABASE_URL` correspond aux autres variables PG*
+   - Le service `db` doit être démarré avant `server`
+
+3. **Ports occupés**
+   ```bash
+   # Vérifier les ports utilisés
+   ss -tulpn | grep -E "(4173|5000|5432)"
+   
+   # Libérer un port si nécessaire
+   sudo fuser -k 5000/tcp
+   ```
+
+## Variables par environnement
+
+### Développement local
+```bash
 NODE_ENV=development
-DATABASE_URL=postgresql://localhost:5432/suprss_dev
+DATABASE_URL=postgresql://user:pass@localhost:5432/suprss_dev
 VITE_API_URL=http://localhost:5000
 ```
 
-### Production
-```env
+### Production Docker
+```bash
 NODE_ENV=production
-DATABASE_URL=postgresql://user:pass@prod-host:5432/suprss_prod
-VITE_API_URL=https://votre-api.domaine.com
+DATABASE_URL=postgresql://suprss:suprsspass@db:5432/suprssdb
+VITE_API_URL=http://localhost:5000
 ```
 
-## Dépannage
-
-### Variable manquante
-Si une variable requise manque, l'application affichera une erreur explicite au démarrage.
-
-### Base de données inaccessible
-Vérifiez que :
-- Les credentials de base sont corrects
-- Le serveur PostgreSQL est démarré
-- Les ports ne sont pas bloqués
-
-### Authentification échouée
-Vérifiez que :
-- `REPL_ID` correspond à votre projet Replit
-- `REPLIT_DOMAINS` inclut votre domaine actuel
-- `SESSION_SECRET` est défini et sécurisé
+### Production serveur
+```bash
+NODE_ENV=production
+DATABASE_URL=postgresql://user:pass@prod-db:5432/suprss_prod
+VITE_API_URL=https://api.votre-domaine.com
+```
