@@ -45,6 +45,7 @@ export interface IStorage {
   searchArticles(userId: string, query: string): Promise<(Article & { feed: Feed })[]>;
   markArticleRead(userId: string, articleId: number, read: boolean): Promise<void>;
   toggleArticleFavorite(userId: string, articleId: number): Promise<void>;
+  getUserArticleData(userId: string, articleId: number): Promise<UserArticle | undefined>;
   
   // Collection operations
   createCollection(collection: InsertCollection): Promise<Collection>;
@@ -211,21 +212,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   async markArticleRead(userId: string, articleId: number, read: boolean): Promise<void> {
-    await db
-      .insert(userArticles)
-      .values({
-        userId,
-        articleId,
-        read,
-        readAt: read ? new Date() : null,
-      })
-      .onConflictDoUpdate({
-        target: [userArticles.userId, userArticles.articleId],
-        set: {
+    // Check if record exists
+    const existing = await db
+      .select()
+      .from(userArticles)
+      .where(and(eq(userArticles.userId, userId), eq(userArticles.articleId, articleId)));
+
+    if (existing.length > 0) {
+      // Update existing record
+      await db
+        .update(userArticles)
+        .set({
           read,
           readAt: read ? new Date() : null,
-        },
-      });
+        })
+        .where(and(eq(userArticles.userId, userId), eq(userArticles.articleId, articleId)));
+    } else {
+      // Insert new record
+      await db
+        .insert(userArticles)
+        .values({
+          userId,
+          articleId,
+          read,
+          readAt: read ? new Date() : null,
+        });
+    }
   }
 
   async toggleArticleFavorite(userId: string, articleId: number): Promise<void> {
@@ -236,21 +248,35 @@ export class DatabaseStorage implements IStorage {
 
     const isFavorite = existing[0]?.favorite || false;
 
-    await db
-      .insert(userArticles)
-      .values({
-        userId,
-        articleId,
-        favorite: !isFavorite,
-        favoriteAt: !isFavorite ? new Date() : null,
-      })
-      .onConflictDoUpdate({
-        target: [userArticles.userId, userArticles.articleId],
-        set: {
+    if (existing.length > 0) {
+      // Update existing record
+      await db
+        .update(userArticles)
+        .set({
           favorite: !isFavorite,
           favoriteAt: !isFavorite ? new Date() : null,
-        },
-      });
+        })
+        .where(and(eq(userArticles.userId, userId), eq(userArticles.articleId, articleId)));
+    } else {
+      // Insert new record
+      await db
+        .insert(userArticles)
+        .values({
+          userId,
+          articleId,
+          favorite: !isFavorite,
+          favoriteAt: !isFavorite ? new Date() : null,
+        });
+    }
+  }
+
+  async getUserArticleData(userId: string, articleId: number): Promise<UserArticle | undefined> {
+    const [userArticle] = await db
+      .select()
+      .from(userArticles)
+      .where(and(eq(userArticles.userId, userId), eq(userArticles.articleId, articleId)));
+    
+    return userArticle;
   }
 
   // Collection operations

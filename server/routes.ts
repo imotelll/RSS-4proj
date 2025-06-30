@@ -91,6 +91,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/feeds/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const feedId = parseInt(req.params.id);
+      
+      const feed = await storage.getFeed(feedId);
+      if (!feed) {
+        return res.status(404).json({ message: "Feed not found" });
+      }
+      
+      if (feed.ownerId !== userId) {
+        return res.status(403).json({ message: "Unauthorized access to feed" });
+      }
+      
+      res.json(feed);
+    } catch (error) {
+      console.error("Error fetching feed:", error);
+      res.status(500).json({ message: "Failed to fetch feed" });
+    }
+  });
+
+  app.get('/api/feeds/:id/articles', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const feedId = parseInt(req.params.id);
+      
+      const feed = await storage.getFeed(feedId);
+      if (!feed) {
+        return res.status(404).json({ message: "Feed not found" });
+      }
+      
+      if (feed.ownerId !== userId) {
+        return res.status(403).json({ message: "Unauthorized access to feed" });
+      }
+      
+      const articles = await storage.getArticlesByFeed(feedId);
+      
+      // Add feed info and user article data to each article
+      const articlesWithFeedAndUserData = await Promise.all(
+        articles.map(async (article) => {
+          const userArticle = await storage.getUserArticleData(userId, article.id);
+          return {
+            ...article,
+            feed: { id: feed.id, title: feed.title },
+            userArticle
+          };
+        })
+      );
+      
+      res.json(articlesWithFeedAndUserData);
+    } catch (error) {
+      console.error("Error fetching feed articles:", error);
+      res.status(500).json({ message: "Failed to fetch feed articles" });
+    }
+  });
+
   app.delete('/api/feeds/:id', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
