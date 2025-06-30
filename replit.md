@@ -138,6 +138,12 @@ SUPRSS is a modern, collaborative RSS reader web application built for InfoFlux 
 ```
 Changelog:
 - June 30, 2025. Initial setup
+- June 30, 2025. Migration complète vers .env et déploiement Docker autonome
+  * Suppression des dépendances au fichier .replit
+  * Configuration complète avec docker-compose.yml
+  * Migration automatique de base de données au démarrage Docker
+  * Endpoint de santé pour les vérifications Docker
+  * Documentation complète du déploiement Docker
 ```
 
 ## User Preferences

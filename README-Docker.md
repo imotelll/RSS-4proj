@@ -1,75 +1,81 @@
 # SUPRSS - Déploiement Docker
 
-Ce guide explique comment lancer l'application SUPRSS avec Docker Compose.
+## Déploiement rapide avec Docker
 
-## Prérequis
+SUPRSS peut être entièrement déployé avec Docker en une seule commande. Aucune installation manuelle n'est requise.
 
-- Docker et Docker Compose installés
-- Port 4173, 5000 et 5432 disponibles
+### Prérequis
 
-## Configuration
+- Docker et Docker Compose installés sur votre système
 
-1. **Copiez le fichier d'environnement :**
-   ```bash
-   cp docker-env.example .env.docker
-   ```
-
-2. **Modifiez les variables d'environnement dans `.env.docker` :**
-   - `SESSION_SECRET` : Changez pour une clé secrète sécurisée
-   - `REPL_ID` : Votre ID Repl depuis Replit (pour l'authentification)
-   - `REPLIT_DOMAINS` : Ajustez selon votre domaine
-
-## Lancement
+### Lancement
 
 ```bash
-# Construire et lancer tous les services
-docker-compose up --build
+# Cloner le projet
+git clone <url-du-projet>
+cd suprss
 
-# Ou en arrière-plan
-docker-compose up --build -d
+# Lancer l'application complète
+docker-compose up --build
 ```
 
-## Services
+### Accès à l'application
+
+Une fois les conteneurs démarrés :
 
 - **Frontend** : http://localhost:4173
 - **Backend API** : http://localhost:5000
-- **Base de données** : localhost:5432
+- **Base de données** : PostgreSQL sur localhost:5432
 
-## Structure des conteneurs
+### Architecture Docker
 
-- `db` : PostgreSQL 15 avec données persistantes
-- `server` : Backend Node.js/Express sur port 5000
-- `client` : Frontend React servi par Nginx sur port 4173
+L'application utilise 3 conteneurs :
 
-## Commandes utiles
+1. **`db`** : PostgreSQL 15 avec données persistantes
+2. **`server`** : Backend Node.js avec migration automatique de la base
+3. **`client`** : Frontend React servi par Nginx avec proxy API
+
+### Migration automatique
+
+Le conteneur serveur exécute automatiquement `drizzle-kit push` au démarrage pour créer/mettre à jour le schéma de base de données.
+
+### Variables d'environnement
+
+Les variables sont définies directement dans `docker-compose.yml` pour un déploiement autonome :
+
+- Base de données : `suprss:suprsspass@db:5432/suprssdb`
+- Session secret : `docker-session-secret-change-in-production`
+- Domaines autorisés : `localhost:4173,localhost:5000`
+
+### Arrêt
 
 ```bash
-# Voir les logs
-docker-compose logs -f
-
-# Arrêter les services
+# Arrêter les conteneurs
 docker-compose down
 
-# Supprimer volumes (données DB)
+# Arrêter et supprimer les volumes (données perdues)
 docker-compose down -v
-
-# Reconstruire un service spécifique
-docker-compose build server
-docker-compose up server
 ```
 
-## Configuration base de données
+### Logs
 
-La base PostgreSQL utilise :
-- Utilisateur : `suprss`
-- Mot de passe : `suprsspass`
-- Base : `suprssdb`
-- Port : `5432`
+```bash
+# Voir tous les logs
+docker-compose logs
 
-Les données sont persistantes via un volume Docker.
+# Voir les logs d'un service spécifique
+docker-compose logs server
+docker-compose logs client
+docker-compose logs db
+```
 
-## Dépannage
+### Développement local
 
-1. **Port occupé** : Vérifiez qu'aucun service n'utilise les ports 4173, 5000 ou 5432
-2. **Erreur de build** : Supprimez les images et reconstruisez avec `docker-compose build --no-cache`
-3. **Problème de DB** : Vérifiez les logs avec `docker-compose logs db`
+Pour le développement, utilisez plutôt :
+
+```bash
+cp .env.example .env
+# Éditer .env avec vos valeurs
+npm install
+npm run dev
+```

@@ -26,13 +26,25 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://suprss:suprsspass@db:5432/suprssdb
-      - SESSION_SECRET=your-session-secret-key-here
-      - REPL_ID=your-repl-id
-      - REPLIT_DOMAINS=localhost:5000
+      - PGHOST=db
+      - PGPORT=5432
+      - PGUSER=suprss
+      - PGPASSWORD=suprsspass
+      - PGDATABASE=suprssdb
+      - SESSION_SECRET=docker-session-secret-change-in-production
+      - REPL_ID=docker-deployment
+      - REPLIT_DOMAINS=localhost:4173,localhost:5000
       - ISSUER_URL=https://replit.com/oidc
     depends_on:
       db:
         condition: service_healthy
+    command: |
+      sh -c "
+        echo 'Waiting for database to be ready...' &&
+        npx drizzle-kit push --verbose &&
+        echo 'Database migration completed, starting server...' &&
+        npx tsx server/index.ts
+      "
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
       interval: 30s
