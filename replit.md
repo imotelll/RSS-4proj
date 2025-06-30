@@ -144,6 +144,12 @@ Changelog:
   * Migration automatique de base de données au démarrage Docker
   * Endpoint de santé pour les vérifications Docker
   * Documentation complète du déploiement Docker
+- June 30, 2025. Résolution du problème critique de build Docker
+  * Séparation complète des builds client/serveur
+  * Frontend: vite build uniquement, Backend: tsx direct
+  * Script de démarrage intelligent avec gestion des migrations
+  * Dockerfiles optimisés sans dépendances croisées
+  * Script de test docker-test.sh pour validation
 ```
 
 ## User Preferences

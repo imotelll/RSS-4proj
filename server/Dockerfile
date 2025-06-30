@@ -9,15 +9,18 @@ RUN apk add --no-cache curl
 COPY package*.json ./
 COPY tsconfig.json ./
 
-# Install dependencies including tsx
-RUN npm ci
+# Install dependencies
+RUN npm ci --only=production
 
-# Copy source files
+# Copy only backend related files
 COPY server/ ./server/
 COPY shared/ ./shared/
 COPY drizzle.config.ts ./
 
+# Make start script executable
+RUN chmod +x server/start.sh
+
 EXPOSE 5000
 
-# Use tsx to run TypeScript directly in production
-CMD ["npx", "tsx", "server/index.ts"]
+# Use the start script that handles migrations
+CMD ["sh", "server/start.sh"]

@@ -38,13 +38,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: |
-      sh -c "
-        echo 'Waiting for database to be ready...' &&
-        npx drizzle-kit push --verbose &&
-        echo 'Database migration completed, starting server...' &&
-        npx tsx server/index.ts
-      "
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
       interval: 30s

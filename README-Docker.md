@@ -12,8 +12,8 @@ SUPRSS peut être entièrement déployé avec Docker en une seule commande. Aucu
 
 ```bash
 # Cloner le projet
-git clone <url-du-projet>
-cd suprss
+git clone https://github.com/azure509/RSS-Project.git
+cd RSS-Project
 
 # Lancer l'application complète
 docker-compose up --build
@@ -38,6 +38,14 @@ L'application utilise 3 conteneurs :
 ### Migration automatique
 
 Le conteneur serveur exécute automatiquement `drizzle-kit push` au démarrage pour créer/mettre à jour le schéma de base de données.
+
+### Résolution des problèmes de build
+
+**Problème résolu** : Séparation des builds client/serveur
+- Le frontend utilise uniquement `vite build` 
+- Le backend utilise `tsx` directement sans compilation esbuild
+- Aucune dépendance croisée entre les conteneurs
+- Script de démarrage intelligent avec gestion des migrations
 
 ### Variables d'environnement
 

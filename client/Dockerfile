@@ -17,8 +17,8 @@ RUN npm ci
 COPY client/ ./client/
 COPY shared/ ./shared/
 
-# Build the frontend
-RUN npm run build
+# Build only the frontend with vite
+RUN npx vite build
 
 FROM nginx:alpine
 
