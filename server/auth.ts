@@ -1,8 +1,12 @@
+import dotenv from "dotenv";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { storage } from "./storage";
 import type { User } from "@shared/schema";
+
+// Load environment variables
+dotenv.config();
 
 // Configure local strategy for email/password
 passport.use(new LocalStrategy(
@@ -26,7 +30,7 @@ passport.use(new LocalStrategy(
 
 // Configure Google strategy only if credentials are available
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-  passport.use('google', new GoogleStrategy(
+  passport.use(new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
