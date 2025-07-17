@@ -33,10 +33,13 @@ SUPRSS is a modern, collaborative RSS reader web application built for InfoFlux 
 ## Key Components
 
 ### Authentication System
-- **Provider**: Replit Auth with OAuth2 support (Google, Microsoft, GitHub)
+- **Multi-Provider Support**: Email registration, Google OAuth, and Replit Auth
+- **Email Registration**: Local account creation with bcrypt password hashing
+- **Google OAuth**: Seamless Google account integration with profile sync
 - **Session Storage**: PostgreSQL-backed sessions with configurable TTL (7 days default)
 - **User Management**: Complete profile system with preferences and settings
 - **Security**: Secure cookie-based sessions with CSRF protection and domain validation
+- **Mixed Authentication**: Middleware supporting both Replit and local authentication methods
 
 ### Feed Management System
 - **RSS Parser**: Custom implementation supporting multiple feed formats with fallback handling
@@ -150,6 +153,13 @@ Changelog:
   * Script de démarrage intelligent avec gestion des migrations
   * Dockerfiles optimisés sans dépendances croisées
   * Script de test docker-test.sh pour validation
+- January 17, 2025. Système d'authentification multi-provider
+  * Inscription par email avec validation des mots de passe
+  * Intégration Google OAuth pour connexion rapide
+  * Schema utilisateur étendu avec authProvider et password
+  * Page d'accueil avec formulaires d'inscription
+  * Middleware d'authentification mixte (Replit + local)
+  * Routes API complètes pour inscription et connexion
 ```
 
 ## User Preferences

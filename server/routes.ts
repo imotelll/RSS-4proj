@@ -91,24 +91,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     })(req, res, next);
   });
 
-  // Google authentication routes
-  app.get('/api/auth/google', 
-    passport.authenticate('google', { scope: ['profile', 'email'] })
-  );
+  // Google authentication routes (only if Google OAuth is configured)
+  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    app.get('/api/auth/google', 
+      passport.authenticate('google', { scope: ['profile', 'email'] })
+    );
 
-  app.get('/api/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: '/' }),
-    (req, res) => {
-      // Successful authentication, redirect to home
-      res.redirect('/');
+    app.get('/api/auth/google/callback',
+      passport.authenticate('google', { failureRedirect: '/' }),
+      (req, res) => {
+        // Successful authentication, redirect to home
+        res.redirect('/');
+      }
+    );
+  } else {
+    // Fallback route if Google OAuth is not configured
+    app.get('/api/auth/google', (req, res) => {
+      res.status(501).json({ message: "Google authentication not configured" });
+    });
+  }
+
+  // Middleware to handle both Replit and local authentication
+  const isAuthenticatedMixed = async (req: any, res: any, next: any) => {
+    // Check if user is authenticated via Replit Auth
+    if (req.user?.claims?.sub) {
+      return next();
     }
-  );
+    
+    // Check if user is authenticated via local/Google auth
+    if (req.user?.id && req.isAuthenticated()) {
+      return next();
+    }
+    
+    // If neither, check Replit auth middleware
+    return isAuthenticated(req, res, (err?: any) => {
+      if (err) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      next();
+    });
+  };
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/user', isAuthenticatedMixed, async (req: any, res) => {
     try {
       const userId = req.user.claims?.sub || req.user.id;
       const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -117,9 +148,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Feed routes
-  app.post('/api/feeds', isAuthenticated, async (req: any, res) => {
+  app.post('/api/feeds', isAuthenticatedMixed, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const feedData = insertFeedSchema.parse({ ...req.body, ownerId: userId });
       
       // Validate RSS feed
@@ -161,9 +192,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/feeds', isAuthenticated, async (req: any, res) => {
+  app.get('/api/feeds', isAuthenticatedMixed, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const feeds = await storage.getUserFeeds(userId);
       res.json(feeds);
     } catch (error) {
@@ -172,9 +203,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/feeds/:id', isAuthenticated, async (req: any, res) => {
+  app.get('/api/feeds/:id', isAuthenticatedMixed, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const feedId = parseInt(req.params.id);
       
       const feed = await storage.getFeed(feedId);
@@ -193,9 +224,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/feeds/:id/articles', isAuthenticated, async (req: any, res) => {
+  app.get('/api/feeds/:id/articles', isAuthenticatedMixed, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const feedId = parseInt(req.params.id);
       
       const feed = await storage.getFeed(feedId);
@@ -228,9 +259,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/feeds/:id', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/feeds/:id', isAuthenticatedMixed, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const feedId = parseInt(req.params.id);
       
       const feed = await storage.getFeed(feedId);
@@ -247,9 +278,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Article routes
-  app.get('/api/articles', isAuthenticated, async (req: any, res) => {
+  app.get('/api/articles', isAuthenticatedMixed, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const limit = parseInt(req.query.limit as string) || 20;
       const offset = parseInt(req.query.offset as string) || 0;
       
@@ -261,9 +292,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/articles/search', isAuthenticated, async (req: any, res) => {
+  app.get('/api/articles/search', isAuthenticatedMixed, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const query = req.query.q as string;
       
       if (!query) {
@@ -278,9 +309,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/articles/:id/read', isAuthenticated, async (req: any, res) => {
+  app.post('/api/articles/:id/read', isAuthenticatedMixed, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const articleId = parseInt(req.params.id);
       const { read } = req.body;
       
@@ -295,9 +326,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/articles/:id/favorite', isAuthenticated, async (req: any, res) => {
+  app.post('/api/articles/:id/favorite', isAuthenticatedMixed, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const articleId = parseInt(req.params.id);
       
       await storage.toggleArticleFavorite(userId, articleId);
@@ -309,9 +340,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Collection routes
-  app.post('/api/collections', isAuthenticated, async (req: any, res) => {
+  app.post('/api/collections', isAuthenticatedMixed, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const collectionData = insertCollectionSchema.parse({ ...req.body, ownerId: userId });
       
       const collection = await storage.createCollection(collectionData);
@@ -325,9 +356,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/collections', isAuthenticated, async (req: any, res) => {
+  app.get('/api/collections', isAuthenticatedMixed, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const collections = await storage.getUserCollections(userId);
       res.json(collections);
     } catch (error) {
@@ -336,7 +367,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/collections/:id', isAuthenticated, async (req: any, res) => {
+  app.get('/api/collections/:id', isAuthenticatedMixed, async (req: any, res) => {
     try {
       const collectionId = parseInt(req.params.id);
       const collection = await storage.getCollection(collectionId);
@@ -355,7 +386,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/collections/:id/members', isAuthenticated, async (req: any, res) => {
+  app.post('/api/collections/:id/members', isAuthenticatedMixed, async (req: any, res) => {
     try {
       const collectionId = parseInt(req.params.id);
       const { userId, role } = req.body;
@@ -369,9 +400,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Comment routes
-  app.post('/api/comments', isAuthenticated, async (req: any, res) => {
+  app.post('/api/comments', isAuthenticatedMixed, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const commentData = insertCommentSchema.parse({ ...req.body, userId });
       
       const comment = await storage.createComment(commentData);
@@ -387,7 +418,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/articles/:id/comments', isAuthenticated, async (req: any, res) => {
+  app.get('/api/articles/:id/comments', isAuthenticatedMixed, async (req: any, res) => {
     try {
       const articleId = parseInt(req.params.id);
       const collectionId = req.query.collectionId ? parseInt(req.query.collectionId as string) : undefined;
@@ -401,9 +432,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // RSS refresh endpoint
-  app.post('/api/feeds/:id/refresh', isAuthenticated, async (req: any, res) => {
+  app.post('/api/feeds/:id/refresh', isAuthenticatedMixed, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const feedId = parseInt(req.params.id);
       
       const feed = await storage.getFeed(feedId);
