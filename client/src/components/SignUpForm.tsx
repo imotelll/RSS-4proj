@@ -61,8 +61,25 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
     registerMutation.mutate(data);
   };
 
-  const handleGoogleSignUp = () => {
-    window.location.href = "/api/auth/google";
+  const handleGoogleSignUp = async () => {
+    try {
+      const response = await fetch("/api/auth/google");
+      if (response.status === 501) {
+        toast({
+          title: "Google Sign-in Unavailable",
+          description: "Google authentication is not configured. Please use email registration.",
+          variant: "destructive",
+        });
+      } else {
+        window.location.href = "/api/auth/google";
+      }
+    } catch (error) {
+      toast({
+        title: "Connection Error",
+        description: "Unable to connect to Google. Please try email registration.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!showForm) {
