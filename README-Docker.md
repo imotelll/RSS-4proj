@@ -45,6 +45,30 @@ L'application utilise 3 conteneurs :
 
 Le conteneur serveur exécute automatiquement `drizzle-kit push` au démarrage pour créer/mettre à jour le schéma de base de données.
 
+### Configuration Google OAuth
+
+Pour activer l'authentification Google, ajoutez les variables suivantes dans votre fichier `.env` :
+
+```env
+GOOGLE_CLIENT_ID=votre-client-id
+GOOGLE_CLIENT_SECRET=votre-client-secret
+```
+
+**URLs de callback autorisées à configurer dans Google Cloud Console :**
+
+- **Développement local** : `http://localhost:5000/api/auth/google/callback`
+- **Docker local** : `http://localhost:4173/api/auth/google/callback`
+- **Production** : `https://votre-domaine.com/api/auth/google/callback`
+
+**Étapes pour configurer Google OAuth :**
+
+1. Allez sur https://console.cloud.google.com/
+2. Créez un nouveau projet ou sélectionnez un projet existant
+3. Activez l'API Google+ ou Google OAuth2
+4. Créez des identifiants OAuth 2.0
+5. Ajoutez les URLs de callback autorisées selon votre environnement
+6. Copiez le Client ID et Client Secret dans votre fichier .env
+
 ### Résolution des problèmes de build
 
 **Problème résolu** : Séparation des builds client/serveur
