@@ -25,13 +25,16 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table for Replit Auth
+// User storage table for Email and Google Auth
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().notNull(),
-  email: varchar("email").unique(),
+  email: varchar("email").unique().notNull(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  password: varchar("password"), // For email registration, null for OAuth
+  emailVerified: boolean("email_verified").default(false),
+  authProvider: varchar("auth_provider").notNull().default("email"), // email, google, replit
   preferences: jsonb("preferences").$type<{
     darkMode?: boolean;
     fontSize?: string;
@@ -222,6 +225,25 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+
+// Zod schemas for validation
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  emailVerified: true,
+});
+
+export const registerUserSchema = insertUserSchema.extend({
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type RegisterUser = z.infer<typeof registerUserSchema>;
 export type InsertFeed = z.infer<typeof insertFeedSchema>;
 export type Feed = typeof feeds.$inferSelect;
 export type InsertArticle = z.infer<typeof insertArticleSchema>;

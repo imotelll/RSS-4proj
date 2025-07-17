@@ -25,11 +25,15 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, sql, ilike } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  createUser(user: Omit<UpsertUser, 'id'> & { password?: string }): Promise<User>;
+  verifyPassword(email: string, password: string): Promise<User | null>;
   
   // Feed operations
   createFeed(feed: InsertFeed): Promise<Feed>;
@@ -72,6 +76,11 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
   async upsertUser(userData: UpsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
@@ -85,6 +94,37 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return user;
+  }
+
+  async createUser(userData: Omit<UpsertUser, 'id'> & { password?: string }): Promise<User> {
+    // Generate unique ID for new user
+    const userId = `user_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+    
+    // Hash password if provided
+    let hashedPassword = null;
+    if (userData.password) {
+      hashedPassword = await bcrypt.hash(userData.password, 12);
+    }
+
+    const newUser = {
+      ...userData,
+      id: userId,
+      password: hashedPassword,
+      emailVerified: userData.authProvider === 'google', // Google users are auto-verified
+    };
+
+    const [user] = await db.insert(users).values(newUser).returning();
+    return user;
+  }
+
+  async verifyPassword(email: string, password: string): Promise<User | null> {
+    const user = await this.getUserByEmail(email);
+    if (!user || !user.password) {
+      return null;
+    }
+
+    const isValid = await bcrypt.compare(password, user.password);
+    return isValid ? user : null;
   }
 
   // Feed operations

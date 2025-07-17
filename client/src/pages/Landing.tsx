@@ -1,8 +1,22 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Rss, Users, Search, Globe } from "lucide-react";
+import SignUpForm from "@/components/SignUpForm";
 
 export default function Landing() {
+  const [showSignUp, setShowSignUp] = useState(false);
+
+  if (showSignUp) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <SignUpForm onSuccess={() => setShowSignUp(false)} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <div className="container mx-auto px-4 py-16">
@@ -19,13 +33,23 @@ export default function Landing() {
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             A modern, collaborative RSS reader that brings teams together around the content that matters most.
           </p>
-          <Button 
-            size="lg" 
-            className="text-lg px-8 py-4"
-            onClick={() => window.location.href = "/api/login"}
-          >
-            Get Started
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button 
+              size="lg" 
+              className="text-lg px-8 py-4"
+              onClick={() => setShowSignUp(true)}
+            >
+              Create Account
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="text-lg px-8 py-4"
+              onClick={() => window.location.href = "/api/login"}
+            >
+              Sign In
+            </Button>
+          </div>
         </div>
 
         {/* Features */}
@@ -89,13 +113,23 @@ export default function Landing() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button 
-                size="lg" 
-                className="text-lg px-8 py-4"
-                onClick={() => window.location.href = "/api/login"}
-              >
-                Sign In to Continue
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button 
+                  size="lg" 
+                  className="text-lg px-8 py-4"
+                  onClick={() => setShowSignUp(true)}
+                >
+                  Get Started for Free
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="text-lg px-8 py-4"
+                  onClick={() => window.location.href = "/api/login"}
+                >
+                  Sign In
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
