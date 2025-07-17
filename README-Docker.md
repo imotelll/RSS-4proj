@@ -58,7 +58,12 @@ GOOGLE_CLIENT_SECRET=votre-client-secret
 
 - **Développement local** : `http://localhost:5000/api/auth/google/callback`
 - **Docker local** : `http://localhost:4173/api/auth/google/callback`
-- **Production** : `https://votre-domaine.com/api/auth/google/callback`
+- **Production** : `https://4proj.lpasr.fr/api/auth/google/callback`
+
+Pour configurer le domaine de production, ajoutez dans votre `.env` :
+```env
+GOOGLE_CALLBACK_URL=https://4proj.lpasr.fr/api/auth/google/callback
+```
 
 **Étapes pour configurer Google OAuth :**
 
