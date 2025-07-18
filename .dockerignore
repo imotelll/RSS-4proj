@@ -1,33 +1,60 @@
-node_modules
-npm-debug.log
+# Fichiers à ignorer lors du build Docker
+
+# Dépendances
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environnement
 .env
 .env.local
-.env.production
-.git
-.gitignore
-README.md
-.nyc_output
-coverage
-.vscode
-.idea
-*.log
-dist
-build
+.env.example
+.env.docker
+docker-env.example
 
-# Development files
-.replit
-replit.nix
+# Build outputs
+dist/
+build/
+
+# Logs
+*.log
+logs/
+
+# Runtime
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-*
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Tests
+coverage/
+.nyc_output
+
+# Documentation non-essentielle
+README*.md
+DEPLOYMENT*.md
+QUICK*.md
 *.md
+
+# Cache
+.cache/
+.parcel-cache/
 
 # Temporary files
 tmp/
 temp/
-
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
