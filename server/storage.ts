@@ -145,7 +145,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserFeeds(userId: string): Promise<Feed[]> {
-    // Retourner tous les flux publics pour permettre le partage entre utilisateurs
+    if (userId === '') {
+      // Retourner tous les flux publics (pour le rafraîchissement automatique)
+      return await db.select().from(feeds).where(eq(feeds.isPublic, true));
+    }
+    
+    // Retourner tous les flux publics car ils sont partagés entre tous les utilisateurs
+    // Mais on garde la logique pour pouvoir distinguer plus tard si nécessaire
     return await db.select().from(feeds).where(eq(feeds.isPublic, true));
   }
 

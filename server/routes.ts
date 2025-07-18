@@ -380,16 +380,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims?.sub || req.user.id;
       const feeds = await storage.getUserFeeds(userId);
       
+      console.log(`Getting stats for ${feeds.length} feeds for user ${userId}`);
+      
       const feedStats = await Promise.all(feeds.map(async (feed) => {
         const feedArticles = await storage.getArticlesByFeed(feed.id);
         const total = feedArticles.length;
         
-        // Obtenir les articles de ce flux avec les données utilisateur
-        const articlesWithUserData = await storage.getUserArticles(userId, 1000, 0);
-        const feedArticlesWithUserData = articlesWithUserData.filter(article => article.feedId === feed.id);
+        // Compter directement les articles lus/non lus pour ce flux spécifique
+        const userArticleData = await Promise.all(
+          feedArticles.map(async (article) => {
+            return await storage.getUserArticleData(userId, article.id);
+          })
+        );
         
-        const unread = feedArticlesWithUserData.filter(article => !article.userArticle?.read).length;
-        const favorites = feedArticlesWithUserData.filter(article => article.userArticle?.favorite).length;
+        const unread = userArticleData.filter(data => !data?.read).length;
+        const favorites = userArticleData.filter(data => data?.favorite).length;
+        const read = userArticleData.filter(data => data?.read).length;
+        
+        console.log(`Feed ${feed.title}: ${total} total, ${unread} unread, ${favorites} favorites, ${read} read`);
         
         return {
           feedId: feed.id,
@@ -397,7 +405,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           total,
           unread,
           favorites,
-          read: total - unread
+          read
         };
       }));
       

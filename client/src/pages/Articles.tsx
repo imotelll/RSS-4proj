@@ -278,13 +278,6 @@ export default function Articles() {
                 Read
               </Button>
               <Button 
-                variant={filter === "read" ? "secondary" : "ghost"} 
-                size="sm"
-                onClick={() => setFilter("read")}
-              >
-                Read
-              </Button>
-              <Button 
                 variant={filter === "favorites" ? "secondary" : "ghost"} 
                 size="sm"
                 onClick={() => setFilter("favorites")}
