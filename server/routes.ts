@@ -159,7 +159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/feeds', isAuthenticatedMixed, async (req: any, res) => {
     try {
       const userId = req.user.claims?.sub || req.user.id;
-      const feedData = insertFeedSchema.parse({ ...req.body, ownerId: userId });
+      const feedData = insertFeedSchema.parse({ ...req.body, ownerId: userId, isPublic: true });
       
       // Validate RSS feed
       const isValid = await RSSParser.validateFeedUrl(feedData.url);

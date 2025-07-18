@@ -44,7 +44,7 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// RSS Feeds
+// RSS Feeds - Partagés entre tous les utilisateurs
 export const feeds = pgTable("feeds", {
   id: serial("id").primaryKey(),
   title: varchar("title").notNull(),
@@ -54,7 +54,8 @@ export const feeds = pgTable("feeds", {
   active: boolean("active").default(true),
   lastFetched: timestamp("last_fetched"),
   fetchInterval: integer("fetch_interval").default(3600), // seconds
-  ownerId: varchar("owner_id").references(() => users.id).notNull(),
+  ownerId: varchar("owner_id").references(() => users.id).notNull(), // Utilisateur qui a ajouté le flux
+  isPublic: boolean("is_public").default(true), // Flux partagé avec tous les utilisateurs
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
