@@ -60,8 +60,8 @@ export default function Favorites() {
     }
   }, [user, isLoading, toast]);
 
-  const { data: articles = [], isLoading: articlesLoading } = useQuery<Article[]>({
-    queryKey: ["/api/articles"],
+  const { data: favoriteArticles = [], isLoading: articlesLoading } = useQuery<Article[]>({
+    queryKey: ["/api/articles/favorites"],
     enabled: !!user,
     retry: false,
   });
@@ -70,8 +70,7 @@ export default function Favorites() {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
-  // Filter only favorite articles
-  const favoriteArticles = articles.filter(article => article.userArticle?.favorite);
+  // Les articles favoris sont déjà filtrés par l'API
 
   const formatLastUpdateTime = () => {
     const now = new Date();

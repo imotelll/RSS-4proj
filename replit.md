@@ -166,6 +166,11 @@ Changelog:
   * Mise à jour des contrôles d'accès pour permettre l'accès aux flux partagés
   * Ajout de la colonne googleId dans le schéma utilisateur
   * Optimisation de la sérialisation/désérialisation des sessions Google
+  * Correction des favoris spécifiques à chaque utilisateur avec route API dédiée
+  * Ajout de statistiques temps réel avec compteurs automatiques dans la Sidebar
+  * Mise à jour automatique des compteurs lors des interactions (lecture, favoris)
+  * Route /api/articles/favorites pour les favoris spécifiques utilisateur
+  * Route /api/stats pour les compteurs temps réel (total, non lus, favoris)
 ```
 
 ## User Preferences

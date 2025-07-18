@@ -308,6 +308,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Route spécifique pour les favoris
+  app.get('/api/articles/favorites', isAuthenticatedMixed, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = parseInt(req.query.offset as string) || 0;
+      
+      const allArticles = await storage.getUserArticles(userId, limit * 10, 0); // Récupérer plus d'articles
+      const favoriteArticles = allArticles.filter(article => article.userArticle?.favorite);
+      
+      // Paginer les favoris
+      const paginatedFavorites = favoriteArticles.slice(offset, offset + limit);
+      
+      res.json(paginatedFavorites);
+    } catch (error) {
+      console.error("Error fetching favorite articles:", error);
+      res.status(500).json({ message: "Failed to fetch favorite articles" });
+    }
+  });
+
+  // Route pour les statistiques (compteurs)
+  app.get('/api/stats', isAuthenticatedMixed, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      
+      // Compter tous les articles publics
+      const allArticles = await storage.getUserArticles(userId, 1000, 0);
+      const totalArticles = allArticles.length;
+      
+      // Compter les articles non lus
+      const unreadArticles = allArticles.filter(article => !article.userArticle?.read).length;
+      
+      // Compter les favoris de l'utilisateur
+      const favoriteArticles = allArticles.filter(article => article.userArticle?.favorite).length;
+      
+      res.json({
+        totalArticles,
+        unreadArticles,
+        favoriteArticles,
+        readArticles: totalArticles - unreadArticles
+      });
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
   app.get('/api/articles/search', isAuthenticatedMixed, async (req: any, res) => {
     try {
       const userId = req.user.claims?.sub || req.user.id;

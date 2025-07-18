@@ -69,6 +69,11 @@ export function Sidebar({ onAddFeed, onCreateCollection }: {
     queryKey: ["/api/collections"],
   });
 
+  const { data: stats = { totalArticles: 0, unreadArticles: 0, favoriteArticles: 0, readArticles: 0 } } = useQuery({
+    queryKey: ["/api/stats"],
+    refetchInterval: 30000, // Mise à jour toutes les 30 secondes
+  });
+
   const deleteFeedMutation = useMutation({
     mutationFn: async (feedId: number) => {
       await apiRequest("DELETE", `/api/feeds/${feedId}`);
@@ -81,6 +86,8 @@ export function Sidebar({ onAddFeed, onCreateCollection }: {
       
       queryClient.invalidateQueries({ queryKey: ["/api/feeds"] });
       queryClient.invalidateQueries({ queryKey: ["/api/articles"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/articles/favorites"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       setFeedToDelete(null);
     },
     onError: (error) => {
@@ -148,7 +155,7 @@ export function Sidebar({ onAddFeed, onCreateCollection }: {
             >
               <List className="mr-3 h-4 w-4" />
               All Articles
-              <Badge variant="secondary" className="ml-auto">42</Badge>
+              <Badge variant="secondary" className="ml-auto">{stats.totalArticles}</Badge>
             </Button>
           </Link>
 
@@ -159,7 +166,7 @@ export function Sidebar({ onAddFeed, onCreateCollection }: {
             >
               <Star className="mr-3 h-4 w-4" />
               Favorites
-              <Badge variant="secondary" className="ml-auto">8</Badge>
+              <Badge variant="secondary" className="ml-auto">{stats.favoriteArticles}</Badge>
             </Button>
           </Link>
 
