@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { apiRequest } from "@/lib/queryClient";
 import { Sidebar } from "@/components/Sidebar";
 import { ArticleCard } from "@/components/ArticleCard";
 import { AddFeedModal } from "@/components/AddFeedModal";
@@ -50,6 +51,7 @@ export default function Articles() {
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
+  const queryClient = useQueryClient();
   const [showAddFeed, setShowAddFeed] = useState(false);
   const [showCreateCollection, setShowCreateCollection] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -75,6 +77,39 @@ export default function Articles() {
     queryKey: ["/api/articles"],
     enabled: !!user,
     retry: false,
+  });
+
+  // Mutation pour rafraîchir tous les flux
+  const refreshAllMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", "/api/feeds/refresh-all");
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Feeds refreshed",
+        description: `${data.totalNewArticles} new articles from ${data.refreshedFeeds} feeds`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/articles"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to refresh feeds. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   const toggleTheme = () => {
@@ -180,8 +215,13 @@ export default function Articles() {
               </div>
               
               {/* Action Buttons */}
-              <Button variant="ghost" size="sm">
-                <RefreshCw className="h-4 w-4" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => refreshAllMutation.mutate()}
+                disabled={refreshAllMutation.isPending}
+              >
+                <RefreshCw className={`h-4 w-4 ${refreshAllMutation.isPending ? 'animate-spin' : ''}`} />
               </Button>
               
               <Button variant="ghost" size="sm" onClick={toggleTheme}>

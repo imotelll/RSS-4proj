@@ -494,17 +494,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // RSS refresh endpoint
+  // RSS refresh endpoint - accessible à tous pour les flux publics
   app.post('/api/feeds/:id/refresh', isAuthenticatedMixed, async (req: any, res) => {
     try {
       const userId = req.user.claims?.sub || req.user.id;
       const feedId = parseInt(req.params.id);
       
       const feed = await storage.getFeed(feedId);
-      if (!feed || feed.ownerId !== userId) {
+      if (!feed) {
         return res.status(404).json({ message: "Feed not found" });
       }
 
+      // Permettre le rafraîchissement des flux publics par tous les utilisateurs
+      if (!feed.isPublic && feed.ownerId !== userId) {
+        return res.status(403).json({ message: "Unauthorized to refresh this feed" });
+      }
+
+      console.log(`Refreshing feed: ${feed.title} (${feed.url})`);
       const parsedFeed = await RSSParser.parseFeed(feed.url);
       let newArticlesCount = 0;
 
@@ -523,15 +529,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
           newArticlesCount++;
         } catch (error) {
           // Article might already exist (duplicate guid), skip
+          console.log(`Skipping duplicate article: ${item.title}`);
         }
       }
       
       await storage.updateFeed(feed.id, { lastFetched: new Date() });
+      console.log(`Feed refreshed: ${newArticlesCount} new articles added`);
       
       res.json({ success: true, newArticles: newArticlesCount });
     } catch (error) {
       console.error("Error refreshing feed:", error);
       res.status(500).json({ message: "Failed to refresh feed" });
+    }
+  });
+
+  // Endpoint pour rafraîchir tous les flux publics
+  app.post('/api/feeds/refresh-all', isAuthenticatedMixed, async (req: any, res) => {
+    try {
+      const { feedRefreshService } = await import("./services/feedRefreshService");
+      const result = await feedRefreshService.refreshAllFeeds();
+      
+      res.json({ 
+        success: true, 
+        refreshedFeeds: result.refreshedFeeds, 
+        totalNewArticles: result.totalNewArticles,
+        totalFeeds: result.totalFeeds 
+      });
+    } catch (error) {
+      console.error("Error refreshing all feeds:", error);
+      res.status(500).json({ message: "Failed to refresh feeds" });
     }
   });
 

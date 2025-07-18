@@ -171,6 +171,10 @@ Changelog:
   * Mise à jour automatique des compteurs lors des interactions (lecture, favoris)
   * Route /api/articles/favorites pour les favoris spécifiques utilisateur
   * Route /api/stats pour les compteurs temps réel (total, non lus, favoris)
+  * Service de rafraîchissement automatique des flux RSS toutes les 30 minutes
+  * Boutons de rafraîchissement manuel dans les pages Articles et Favoris
+  * Service feedRefreshService pour gérer les mises à jour intelligentes des flux
+  * Respect des intervalles de rafraîchissement pour éviter la surcharge des serveurs
 ```
 
 ## User Preferences
