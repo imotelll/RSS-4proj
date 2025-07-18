@@ -333,6 +333,11 @@ export class DatabaseStorage implements IStorage {
     return userArticle;
   }
 
+  async checkDatabaseConnection(): Promise<void> {
+    // Simple query to check database connectivity
+    await db.select().from(users).limit(1);
+  }
+
   // Collection operations
   async createCollection(collection: InsertCollection): Promise<Collection> {
     const [newCollection] = await db.insert(collections).values(collection).returning();

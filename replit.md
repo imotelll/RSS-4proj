@@ -175,6 +175,13 @@ Changelog:
   * Boutons de rafraîchissement manuel dans les pages Articles et Favoris
   * Service feedRefreshService pour gérer les mises à jour intelligentes des flux
   * Respect des intervalles de rafraîchissement pour éviter la surcharge des serveurs
+  * Correction des boutons "Read" en double et amélioration des filtres d'articles
+  * Correction des statistiques par flux dans "My Feeds" avec compteurs corrects
+  * Configuration Docker Compose complète avec Dockerfiles optimisés
+  * Health check endpoint /api/health pour monitoring des conteneurs
+  * Guides de déploiement complets (DEPLOYMENT-GUIDE.md et QUICK-START.md)
+  * Configuration .env.docker prête pour la production avec variables sécurisées
+  * Script de test automatique docker-test.sh pour validation du déploiement
 ```
 
 ## User Preferences

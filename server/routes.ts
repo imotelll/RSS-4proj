@@ -622,5 +622,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Health check endpoint pour Docker
+  app.get('/api/health', async (req, res) => {
+    try {
+      // Vérifier la connexion à la base de données
+      await storage.checkDatabaseConnection();
+      
+      res.status(200).json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        version: '1.0.0',
+        database: 'connected'
+      });
+    } catch (error) {
+      console.error('Health check failed:', error);
+      res.status(503).json({ 
+        status: 'error', 
+        timestamp: new Date().toISOString(),
+        database: 'disconnected',
+        error: error.message
+      });
+    }
+  });
+
   return httpServer;
 }
