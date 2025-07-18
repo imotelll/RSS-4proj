@@ -38,6 +38,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
+        console.log('Google OAuth callback - Profile ID:', profile.id);
+        
         // Check if user exists by Google ID first, then by email
         let user = await storage.getUserByGoogleId(profile.id);
         
@@ -47,20 +49,20 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
           
           if (user) {
             // Update existing user with Google info
-            if (user.authProvider !== 'google') {
-              user = await storage.upsertUser({
-                ...user,
-                authProvider: 'google',
-                googleId: profile.id,
-                profileImageUrl: profile.photos?.[0]?.value,
-                emailVerified: true,
-              });
-            }
+            console.log('Updating existing user with Google ID:', profile.id);
+            user = await storage.upsertUser({
+              ...user,
+              authProvider: 'google',
+              googleId: profile.id,
+              profileImageUrl: profile.photos?.[0]?.value,
+              emailVerified: true,
+            });
           }
         }
         
         if (!user) {
           // Create new user from Google profile
+          console.log('Creating new Google user with ID:', profile.id);
           user = await storage.createUser({
             email: profile.emails?.[0]?.value || '',
             firstName: profile.name?.givenName || '',
@@ -71,6 +73,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
             emailVerified: true,
           });
           console.log('Created new Google user:', user.id);
+        } else {
+          console.log('Found existing Google user:', user.id);
         }
         
         return done(null, user);
@@ -92,12 +96,13 @@ passport.deserializeUser(async (id: string, done) => {
     // Récupérer l'utilisateur complet depuis la base de données
     const user = await storage.getUser(id);
     if (!user) {
-      return done(new Error('User not found'), null);
+      console.log('User not found during deserialization, ID:', id);
+      return done(null, false); // Ne pas générer d'erreur, juste retourner false
     }
     done(null, user);
   } catch (error) {
     console.error('Error deserializing user:', error);
-    done(error, null);
+    done(null, false); // Ne pas générer d'erreur, juste retourner false
   }
 });
 
