@@ -190,11 +190,7 @@ export class DatabaseStorage implements IStorage {
     limit = 20,
     offset = 0
   ): Promise<(Article & { feed: Feed; userArticle?: UserArticle })[]> {
-    const userFeedIds = db
-      .select({ id: feeds.id })
-      .from(feeds)
-      .where(eq(feeds.ownerId, userId));
-
+    // Retourner tous les articles des flux publics partagés
     const result = await db
       .select({
         id: articles.id,
@@ -217,7 +213,7 @@ export class DatabaseStorage implements IStorage {
         userArticles,
         and(eq(userArticles.articleId, articles.id), eq(userArticles.userId, userId))
       )
-      .where(sql`${feeds.id} IN ${userFeedIds}`)
+      .where(eq(feeds.isPublic, true)) // Tous les flux publics
       .orderBy(desc(articles.publishedAt))
       .limit(limit)
       .offset(offset);
