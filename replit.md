@@ -160,6 +160,12 @@ Changelog:
   * Page d'accueil avec formulaires d'inscription
   * Middleware d'authentification mixte (Replit + local)
   * Routes API complètes pour inscription et connexion
+- January 18, 2025. Corrections majeures du partage de flux et persistance Google
+  * Correction des erreurs "Feed not found" - tous les flux publics sont maintenant accessibles
+  * Amélioration de la persistence des comptes Google avec googleId unique
+  * Mise à jour des contrôles d'accès pour permettre l'accès aux flux partagés
+  * Ajout de la colonne googleId dans le schéma utilisateur
+  * Optimisation de la sérialisation/désérialisation des sessions Google
 ```
 
 ## User Preferences

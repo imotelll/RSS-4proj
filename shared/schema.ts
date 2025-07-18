@@ -35,6 +35,7 @@ export const users = pgTable("users", {
   password: varchar("password"), // For email registration, null for OAuth
   emailVerified: boolean("email_verified").default(false),
   authProvider: varchar("auth_provider").notNull().default("email"), // email, google, replit
+  googleId: varchar("google_id").unique(), // Google OAuth ID
   preferences: jsonb("preferences").$type<{
     darkMode?: boolean;
     fontSize?: string;

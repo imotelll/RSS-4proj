@@ -101,6 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       passport.authenticate('google', { failureRedirect: '/' }),
       (req, res) => {
         // Successful authentication, redirect to home
+        console.log('Google auth successful, user:', req.user);
         res.redirect('/');
       }
     );
@@ -221,7 +222,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Feed not found" });
       }
       
-      if (feed.ownerId !== userId) {
+      // Permettre l'accès aux flux publics pour tous les utilisateurs
+      if (!feed.isPublic && feed.ownerId !== userId) {
         return res.status(403).json({ message: "Unauthorized access to feed" });
       }
       
@@ -242,7 +244,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Feed not found" });
       }
       
-      if (feed.ownerId !== userId) {
+      // Permettre l'accès aux articles des flux publics pour tous les utilisateurs
+      if (!feed.isPublic && feed.ownerId !== userId) {
         return res.status(403).json({ message: "Unauthorized access to feed" });
       }
       
@@ -273,8 +276,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const feedId = parseInt(req.params.id);
       
       const feed = await storage.getFeed(feedId);
-      if (!feed || feed.ownerId !== userId) {
+      if (!feed) {
         return res.status(404).json({ message: "Feed not found" });
+      }
+      
+      // Seul le propriétaire peut supprimer un flux
+      if (feed.ownerId !== userId) {
+        return res.status(403).json({ message: "Unauthorized: Only the owner can delete this feed" });
       }
 
       await storage.deleteFeed(feedId);

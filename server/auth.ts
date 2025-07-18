@@ -38,20 +38,28 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        // Check if user already exists
-        let user = await storage.getUserByEmail(profile.emails?.[0]?.value || '');
+        // Check if user exists by Google ID first, then by email
+        let user = await storage.getUserByGoogleId(profile.id);
         
-        if (user) {
-          // User exists, update with Google info if needed
-          if (user.authProvider !== 'google') {
-            user = await storage.upsertUser({
-              ...user,
-              authProvider: 'google',
-              profileImageUrl: profile.photos?.[0]?.value,
-              emailVerified: true,
-            });
+        if (!user) {
+          // Check by email if no Google ID match
+          user = await storage.getUserByEmail(profile.emails?.[0]?.value || '');
+          
+          if (user) {
+            // Update existing user with Google info
+            if (user.authProvider !== 'google') {
+              user = await storage.upsertUser({
+                ...user,
+                authProvider: 'google',
+                googleId: profile.id,
+                profileImageUrl: profile.photos?.[0]?.value,
+                emailVerified: true,
+              });
+            }
           }
-        } else {
+        }
+        
+        if (!user) {
           // Create new user from Google profile
           user = await storage.createUser({
             email: profile.emails?.[0]?.value || '',
@@ -59,8 +67,10 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
             lastName: profile.name?.familyName || '',
             profileImageUrl: profile.photos?.[0]?.value,
             authProvider: 'google',
+            googleId: profile.id,
             emailVerified: true,
           });
+          console.log('Created new Google user:', user.id);
         }
         
         return done(null, user);
@@ -73,15 +83,21 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 
 // Serialize/deserialize user for session
 passport.serializeUser((user: any, done) => {
+  // Sérialiser l'ID utilisateur pour la session
   done(null, user.id);
 });
 
 passport.deserializeUser(async (id: string, done) => {
   try {
+    // Récupérer l'utilisateur complet depuis la base de données
     const user = await storage.getUser(id);
+    if (!user) {
+      return done(new Error('User not found'), null);
+    }
     done(null, user);
   } catch (error) {
-    done(error);
+    console.error('Error deserializing user:', error);
+    done(error, null);
   }
 });
 
