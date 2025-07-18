@@ -123,13 +123,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return next();
     }
     
-    // If neither, check Replit auth middleware
-    return isAuthenticated(req, res, (err?: any) => {
-      if (err) {
+    // If neither, try Replit auth middleware but handle strategy errors gracefully
+    try {
+      return isAuthenticated(req, res, (err?: any) => {
+        if (err) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+        next();
+      });
+    } catch (error: any) {
+      // If Replit auth strategy fails (e.g., unknown domain), treat as unauthorized
+      if (error.message && error.message.includes('Unknown authentication strategy')) {
         return res.status(401).json({ message: "Unauthorized" });
       }
-      next();
-    });
+      return res.status(401).json({ message: "Unauthorized" });
+    }
   };
 
   // Auth routes
