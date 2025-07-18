@@ -60,6 +60,7 @@ export function Sidebar({ onAddFeed, onCreateCollection }: {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [feedToDelete, setFeedToDelete] = useState<Feed | null>(null);
+  const [collectionToDelete, setCollectionToDelete] = useState<Collection | null>(null);
 
   const { data: feeds = [] } = useQuery<Feed[]>({
     queryKey: ["/api/feeds"],
@@ -93,6 +94,7 @@ export function Sidebar({ onAddFeed, onCreateCollection }: {
       queryClient.invalidateQueries({ queryKey: ["/api/articles"] });
       queryClient.invalidateQueries({ queryKey: ["/api/articles/favorites"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/feeds/stats"] });
       setFeedToDelete(null);
     },
     onError: (error) => {
@@ -116,13 +118,57 @@ export function Sidebar({ onAddFeed, onCreateCollection }: {
     },
   });
 
+  const deleteCollectionMutation = useMutation({
+    mutationFn: async (collectionId: number) => {
+      await apiRequest("DELETE", `/api/collections/${collectionId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Collection deleted",
+        description: "Collection has been successfully deleted.",
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/collections"] });
+      setCollectionToDelete(null);
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete collection. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleDeleteFeed = (feed: Feed) => {
     setFeedToDelete(feed);
   };
 
-  const confirmDelete = () => {
+  const handleDeleteCollection = (collection: Collection) => {
+    setCollectionToDelete(collection);
+  };
+
+  const confirmDeleteFeed = () => {
     if (feedToDelete) {
       deleteFeedMutation.mutate(feedToDelete.id);
+    }
+  };
+
+  const confirmDeleteCollection = () => {
+    if (collectionToDelete) {
+      deleteCollectionMutation.mutate(collectionToDelete.id);
     }
   };
 
@@ -253,18 +299,41 @@ export function Sidebar({ onAddFeed, onCreateCollection }: {
             
             <div className="space-y-1">
               {collections.map((collection) => (
-                <Link key={collection.id} href={`/collections/${collection.id}`}>
-                  <Button
-                    variant={isActive(`/collections/${collection.id}`) ? "secondary" : "ghost"}
-                    className="w-full justify-start text-sm"
-                  >
-                    <Users className="mr-3 h-4 w-4 text-muted-foreground" />
-                    <span className="truncate">{collection.name}</span>
-                    <Badge variant="secondary" className="ml-auto text-xs">
-                      {collection.memberCount || 0}
-                    </Badge>
-                  </Button>
-                </Link>
+                <div key={collection.id} className="flex items-center group">
+                  <Link href={`/collections/${collection.id}`} className="flex-1">
+                    <Button
+                      variant={isActive(`/collections/${collection.id}`) ? "secondary" : "ghost"}
+                      className="w-full justify-start text-sm"
+                    >
+                      <Users className="mr-3 h-4 w-4 text-muted-foreground" />
+                      <span className="truncate">{collection.name}</span>
+                      <Badge variant="secondary" className="ml-auto text-xs">
+                        {collection.memberCount || 0}
+                      </Badge>
+                    </Button>
+                  </Link>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        className="text-destructive"
+                        onClick={() => handleDeleteCollection(collection)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete Collection
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               ))}
             </div>
           </div>
@@ -315,11 +384,33 @@ export function Sidebar({ onAddFeed, onCreateCollection }: {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmDelete}
+              onClick={confirmDeleteFeed}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deleteFeedMutation.isPending}
             >
               {deleteFeedMutation.isPending ? "Deleting..." : "Delete Feed"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Collection Confirmation Dialog */}
+      <AlertDialog open={!!collectionToDelete} onOpenChange={() => setCollectionToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Collection</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{collectionToDelete?.name}"? This action cannot be undone and will remove all members, feeds, and messages from this collection.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteCollection}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteCollectionMutation.isPending}
+            >
+              {deleteCollectionMutation.isPending ? "Deleting..." : "Delete Collection"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

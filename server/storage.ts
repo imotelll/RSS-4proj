@@ -490,6 +490,20 @@ export class DatabaseStorage implements IStorage {
 
     return result as any;
   }
+
+  async deleteCollection(id: number): Promise<void> {
+    // First delete all collection feeds
+    await db.delete(collectionFeeds).where(eq(collectionFeeds.collectionId, id));
+    
+    // Then delete all collection members
+    await db.delete(collectionMembers).where(eq(collectionMembers.collectionId, id));
+    
+    // Delete all messages in the collection
+    await db.delete(messages).where(eq(messages.collectionId, id));
+    
+    // Finally delete the collection itself
+    await db.delete(collections).where(eq(collections.id, id));
+  }
 }
 
 export const storage = new DatabaseStorage();

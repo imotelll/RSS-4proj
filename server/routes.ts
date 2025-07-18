@@ -280,9 +280,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Feed not found" });
       }
       
-      // Seul le propriétaire peut supprimer un flux
-      if (feed.ownerId !== userId) {
-        return res.status(403).json({ message: "Unauthorized: Only the owner can delete this feed" });
+      // Permettre à tout utilisateur connecté de supprimer des flux publics
+      // puisque tous les flux sont partagés entre utilisateurs
+      if (!feed.isPublic && feed.ownerId !== userId) {
+        return res.status(403).json({ message: "Unauthorized: Only the owner can delete private feeds" });
       }
 
       await storage.deleteFeed(feedId);
@@ -520,6 +521,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error adding collection member:", error);
       res.status(500).json({ message: "Failed to add member" });
+    }
+  });
+
+  // Delete collection
+  app.delete('/api/collections/:id', isAuthenticatedMixed, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      const collectionId = parseInt(req.params.id);
+      
+      const collection = await storage.getCollection(collectionId);
+      if (!collection) {
+        return res.status(404).json({ message: "Collection not found" });
+      }
+      
+      // Seul le propriétaire peut supprimer une collection
+      if (collection.ownerId !== userId) {
+        return res.status(403).json({ message: "Unauthorized: Only the owner can delete this collection" });
+      }
+
+      await storage.deleteCollection(collectionId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting collection:", error);
+      res.status(500).json({ message: "Failed to delete collection" });
     }
   });
 
