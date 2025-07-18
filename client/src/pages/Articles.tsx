@@ -74,7 +74,18 @@ export default function Articles() {
   }, [user, isLoading, toast]);
 
   const { data: articles = [], isLoading: articlesLoading } = useQuery<Article[]>({
-    queryKey: ["/api/articles"],
+    queryKey: ["/api/articles", { filter }], // Inclure le filtre dans la queryKey
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filter && filter !== 'all') {
+        params.append('filter', filter);
+      }
+      const response = await fetch(`/api/articles?${params}`);
+      if (!response.ok) {
+        throw new Error(`${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    },
     enabled: !!user,
     retry: false,
   });
@@ -91,6 +102,7 @@ export default function Articles() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/articles"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/feeds/stats"] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -257,6 +269,13 @@ export default function Articles() {
                 onClick={() => setFilter("unread")}
               >
                 Unread
+              </Button>
+              <Button 
+                variant={filter === "read" ? "secondary" : "ghost"} 
+                size="sm"
+                onClick={() => setFilter("read")}
+              >
+                Read
               </Button>
               <Button 
                 variant={filter === "read" ? "secondary" : "ghost"} 

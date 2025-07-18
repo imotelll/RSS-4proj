@@ -297,11 +297,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/articles', isAuthenticatedMixed, async (req: any, res) => {
     try {
       const userId = req.user.claims?.sub || req.user.id;
-      const limit = parseInt(req.query.limit as string) || 20;
+      const limit = parseInt(req.query.limit as string) || 100; // Augmenter la limite pour avoir plus d'articles
       const offset = parseInt(req.query.offset as string) || 0;
+      const filter = req.query.filter as string || 'all';
       
-      const articles = await storage.getUserArticles(userId, limit, offset);
-      res.json(articles);
+      let articles = await storage.getUserArticles(userId, limit, offset);
+      
+      // Enrichir avec les données read/favorite AVANT de filtrer
+      const enrichedArticles = articles.map(article => ({
+        ...article,
+        read: article.userArticle?.read || false,
+        favorite: article.userArticle?.favorite || false,
+      }));
+      
+      // Appliquer le filtre APRÈS enrichissement
+      let filteredArticles = enrichedArticles;
+      if (filter === 'unread') {
+        filteredArticles = enrichedArticles.filter(article => !article.read);
+      } else if (filter === 'read') {
+        filteredArticles = enrichedArticles.filter(article => article.read);
+      }
+      
+      console.log(`Filter: ${filter}, Total articles: ${enrichedArticles.length}, Filtered: ${filteredArticles.length}`);
+      
+      res.json(filteredArticles);
     } catch (error) {
       console.error("Error fetching articles:", error);
       res.status(500).json({ message: "Failed to fetch articles" });
@@ -352,6 +371,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching stats:", error);
       res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Route pour les statistiques par flux
+  app.get('/api/feeds/stats', isAuthenticatedMixed, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      const feeds = await storage.getUserFeeds(userId);
+      
+      const feedStats = await Promise.all(feeds.map(async (feed) => {
+        const feedArticles = await storage.getArticlesByFeed(feed.id);
+        const total = feedArticles.length;
+        
+        // Obtenir les articles de ce flux avec les données utilisateur
+        const articlesWithUserData = await storage.getUserArticles(userId, 1000, 0);
+        const feedArticlesWithUserData = articlesWithUserData.filter(article => article.feedId === feed.id);
+        
+        const unread = feedArticlesWithUserData.filter(article => !article.userArticle?.read).length;
+        const favorites = feedArticlesWithUserData.filter(article => article.userArticle?.favorite).length;
+        
+        return {
+          feedId: feed.id,
+          title: feed.title,
+          total,
+          unread,
+          favorites,
+          read: total - unread
+        };
+      }));
+      
+      res.json(feedStats);
+    } catch (error) {
+      console.error("Error fetching feed stats:", error);
+      res.status(500).json({ message: "Failed to fetch feed stats" });
     }
   });
 

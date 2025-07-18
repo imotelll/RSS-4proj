@@ -47,6 +47,7 @@ export function ArticleCard({ article }: { article: Article }) {
       setIsRead(read);
       queryClient.invalidateQueries({ queryKey: ["/api/articles"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/feeds/stats"] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -77,6 +78,7 @@ export function ArticleCard({ article }: { article: Article }) {
       queryClient.invalidateQueries({ queryKey: ["/api/articles"] });
       queryClient.invalidateQueries({ queryKey: ["/api/articles/favorites"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/feeds/stats"] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {

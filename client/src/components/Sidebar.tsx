@@ -74,6 +74,11 @@ export function Sidebar({ onAddFeed, onCreateCollection }: {
     refetchInterval: 30000, // Mise à jour toutes les 30 secondes
   });
 
+  const { data: feedStats = [] } = useQuery({
+    queryKey: ["/api/feeds/stats"],
+    refetchInterval: 30000, // Mise à jour toutes les 30 secondes
+  });
+
   const deleteFeedMutation = useMutation({
     mutationFn: async (feedId: number) => {
       await apiRequest("DELETE", `/api/feeds/${feedId}`);
@@ -187,18 +192,22 @@ export function Sidebar({ onAddFeed, onCreateCollection }: {
             </div>
             
             <div className="space-y-1">
-              {feeds.map((feed) => (
-                <div key={feed.id} className="flex items-center group">
-                  <Link href={`/feeds/${feed.id}`} className="flex-1">
-                    <Button
-                      variant={isActive(`/feeds/${feed.id}`) ? "secondary" : "ghost"}
-                      className="w-full justify-start text-sm"
-                    >
-                      <div className={`w-3 h-3 rounded-full mr-3 ${feed.active ? 'bg-green-500' : 'bg-gray-400'}`} />
-                      <span className="truncate">{feed.title}</span>
-                      <Badge variant="secondary" className="ml-auto text-xs">12</Badge>
-                    </Button>
-                  </Link>
+              {feeds.map((feed) => {
+                const feedStat = feedStats.find((stat: any) => stat.feedId === feed.id);
+                const unreadCount = feedStat?.unread || 0;
+                
+                return (
+                  <div key={feed.id} className="flex items-center group">
+                    <Link href={`/feeds/${feed.id}`} className="flex-1">
+                      <Button
+                        variant={isActive(`/feeds/${feed.id}`) ? "secondary" : "ghost"}
+                        className="w-full justify-start text-sm"
+                      >
+                        <div className={`w-3 h-3 rounded-full mr-3 ${feed.active ? 'bg-green-500' : 'bg-gray-400'}`} />
+                        <span className="truncate">{feed.title}</span>
+                        <Badge variant="secondary" className="ml-auto text-xs">{unreadCount}</Badge>
+                      </Button>
+                    </Link>
                   
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -221,7 +230,8 @@ export function Sidebar({ onAddFeed, onCreateCollection }: {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 

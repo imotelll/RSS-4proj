@@ -80,6 +80,7 @@ export default function Favorites() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/articles/favorites"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/feeds/stats"] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
