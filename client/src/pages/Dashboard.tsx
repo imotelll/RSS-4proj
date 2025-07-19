@@ -24,7 +24,8 @@ import {
   Moon, 
   Sun, 
   Plus, 
-  List
+  List,
+  Menu
 } from "lucide-react";
 
 interface Article {
@@ -53,6 +54,7 @@ export default function Dashboard() {
   const [showCreateCollection, setShowCreateCollection] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState("all");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -101,34 +103,51 @@ export default function Dashboard() {
       <Sidebar 
         onAddFeed={() => setShowAddFeed(true)}
         onCreateCollection={() => setShowCreateCollection(true)}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
       />
       
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden lg:ml-0">
         {/* Header */}
-        <header className="bg-card border-b border-border px-6 py-4">
+        <header className="bg-card border-b border-border px-4 lg:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
-              <span className="text-sm text-muted-foreground">
+              {/* Mobile Menu Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="lg:hidden"
+                onClick={() => setIsSidebarOpen(true)}
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+              
+              <h2 className="text-xl lg:text-2xl font-bold text-foreground">Dashboard</h2>
+              <span className="hidden sm:block text-sm text-muted-foreground">
                 {formatLastUpdateTime()}
               </span>
             </div>
             
-            <div className="flex items-center space-x-4">
-              {/* Search Bar */}
-              <div className="relative">
+            <div className="flex items-center space-x-2 lg:space-x-4">
+              {/* Search Bar - hidden on mobile */}
+              <div className="relative hidden md:block">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   type="text"
                   placeholder="Search articles..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-80"
+                  className="pl-10 pr-4 py-2 w-64 lg:w-80"
                 />
               </div>
               
+              {/* Mobile Search Button */}
+              <Button variant="ghost" size="sm" className="md:hidden">
+                <Search className="h-4 w-4" />
+              </Button>
+              
               {/* Action Buttons */}
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="hidden sm:flex">
                 <RefreshCw className="h-4 w-4" />
               </Button>
               
@@ -140,18 +159,18 @@ export default function Dashboard() {
                 )}
               </Button>
               
-              <Button onClick={() => setShowAddFeed(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Feed
+              <Button onClick={() => setShowAddFeed(true)} size="sm">
+                <Plus className="mr-1 lg:mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Add Feed</span>
               </Button>
             </div>
           </div>
         </header>
 
         {/* Filter Bar */}
-        <div className="bg-card border-b border-border px-6 py-3">
+        <div className="bg-card border-b border-border px-4 lg:px-6 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1 lg:space-x-2 overflow-x-auto">
               <Button 
                 variant={filter === "all" ? "secondary" : "ghost"} 
                 size="sm"
@@ -177,6 +196,7 @@ export default function Dashboard() {
                 variant={filter === "week" ? "secondary" : "ghost"} 
                 size="sm"
                 onClick={() => setFilter("week")}
+                className="hidden sm:inline-flex"
               >
                 This Week
               </Button>
@@ -184,7 +204,7 @@ export default function Dashboard() {
             
             <div className="flex items-center space-x-2">
               <Select defaultValue="date">
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-32 lg:w-40">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -194,7 +214,7 @@ export default function Dashboard() {
                 </SelectContent>
               </Select>
               
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="hidden lg:flex">
                 <List className="h-4 w-4" />
               </Button>
             </div>
@@ -203,7 +223,7 @@ export default function Dashboard() {
 
         {/* Article Feed */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-6 space-y-6">
+          <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
             {articlesLoading ? (
               <div className="text-center py-8">
                 <div className="text-muted-foreground">Loading articles...</div>

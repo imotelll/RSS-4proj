@@ -138,27 +138,27 @@ export function ArticleCard({ article }: { article: Article }) {
 
   return (
     <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-6">
-        <div className="flex items-start space-x-4">
+      <CardContent className="p-4 lg:p-6">
+        <div className="flex flex-col sm:flex-row items-start space-y-3 sm:space-y-0 sm:space-x-4">
           {/* Article Image */}
           {article.thumbnail && (
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 w-full sm:w-auto">
               <img 
                 src={article.thumbnail} 
                 alt="Article thumbnail" 
-                className="w-20 h-16 rounded-lg object-cover"
+                className="w-full sm:w-20 h-48 sm:h-16 rounded-lg object-cover"
               />
             </div>
           )}
           
           {/* Article Content */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center space-x-2 mb-2">
-              <div className="w-3 h-3 bg-primary rounded-full" />
+            <div className="flex items-center space-x-2 mb-2 flex-wrap">
+              <div className="w-3 h-3 bg-primary rounded-full flex-shrink-0" />
               <span className="text-sm font-medium text-primary">
                 {article.feed.title}
               </span>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-muted-foreground hidden sm:inline">
                 {formatTimeAgo(article.publishedAt)}
               </span>
               <Badge variant="secondary" className="text-xs">

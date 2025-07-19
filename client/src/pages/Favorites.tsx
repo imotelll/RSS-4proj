@@ -17,7 +17,8 @@ import {
   Moon, 
   Sun, 
   Plus, 
-  Star
+  Star,
+  Menu
 } from "lucide-react";
 
 interface Article {
@@ -46,6 +47,7 @@ export default function Favorites() {
   const [showAddFeed, setShowAddFeed] = useState(false);
   const [showCreateCollection, setShowCreateCollection] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {

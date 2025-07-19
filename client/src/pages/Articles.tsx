@@ -26,7 +26,8 @@ import {
   Sun, 
   Plus, 
   List,
-  Filter
+  Filter,
+  Menu
 } from "lucide-react";
 
 interface Article {
@@ -57,6 +58,7 @@ export default function Articles() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -197,34 +199,51 @@ export default function Articles() {
       <Sidebar 
         onAddFeed={() => setShowAddFeed(true)}
         onCreateCollection={() => setShowCreateCollection(true)}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
       />
       
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden lg:ml-0">
         {/* Header */}
-        <header className="bg-card border-b border-border px-6 py-4">
+        <header className="bg-card border-b border-border px-4 lg:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
+              {/* Mobile Menu Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="lg:hidden"
+                onClick={() => setIsSidebarOpen(true)}
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+              
               <div className="flex items-center space-x-3">
-                <List className="h-6 w-6 text-primary" />
-                <h2 className="text-2xl font-bold text-foreground">Tous les articles</h2>
+                <List className="h-5 lg:h-6 w-5 lg:w-6 text-primary" />
+                <h2 className="text-xl lg:text-2xl font-bold text-foreground">Tous les articles</h2>
               </div>
-              <span className="text-sm text-muted-foreground">
+              <span className="hidden sm:block text-sm text-muted-foreground">
                 {formatLastUpdateTime()}
               </span>
             </div>
             
-            <div className="flex items-center space-x-4">
-              {/* Search Bar */}
-              <div className="relative">
+            <div className="flex items-center space-x-2 lg:space-x-4">
+              {/* Search Bar - hidden on mobile */}
+              <div className="relative hidden md:block">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   type="text"
                   placeholder="Search articles..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-80"
+                  className="pl-10 pr-4 py-2 w-64 lg:w-80"
                 />
               </div>
+              
+              {/* Mobile Search Button */}
+              <Button variant="ghost" size="sm" className="md:hidden">
+                <Search className="h-4 w-4" />
+              </Button>
               
               {/* Action Buttons */}
               <Button 
