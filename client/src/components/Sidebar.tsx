@@ -35,7 +35,9 @@ import {
   Settings,
   LogOut,
   MoreVertical,
-  Trash2 
+  Trash2,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 
 interface Feed {
@@ -68,6 +70,8 @@ export function Sidebar({
   const queryClient = useQueryClient();
   const [feedToDelete, setFeedToDelete] = useState<Feed | null>(null);
   const [collectionToDelete, setCollectionToDelete] = useState<Collection | null>(null);
+  const [showMyFeeds, setShowMyFeeds] = useState(true);
+  const [showCollections, setShowCollections] = useState(true);
 
   const { data: feeds = [] } = useQuery<Feed[]>({
     queryKey: ["/api/feeds"],
@@ -246,9 +250,23 @@ export function Sidebar({
           {/* My Feeds Section */}
           <div className="pt-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                My Feeds
-              </h3>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowMyFeeds(!showMyFeeds)}
+                  className="h-6 w-6 p-0"
+                >
+                  {showMyFeeds ? (
+                    <ChevronDown className="h-3 w-3" />
+                  ) : (
+                    <ChevronRight className="h-3 w-3" />
+                  )}
+                </Button>
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  My Feeds
+                </h3>
+              </div>
               <Button
                 variant="ghost"
                 size="sm"
@@ -259,7 +277,8 @@ export function Sidebar({
               </Button>
             </div>
             
-            <div className="space-y-1">
+            {showMyFeeds && (
+              <div className="space-y-1">
               {feeds.map((feed) => {
                 const feedStat = feedStats.find((stat: any) => stat.feedId === feed.id);
                 const unreadCount = feedStat?.unread || 0;
@@ -300,15 +319,30 @@ export function Sidebar({
                 </div>
                 );
               })}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Collections Section */}
           <div className="pt-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                Collections
-              </h3>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowCollections(!showCollections)}
+                  className="h-6 w-6 p-0"
+                >
+                  {showCollections ? (
+                    <ChevronDown className="h-3 w-3" />
+                  ) : (
+                    <ChevronRight className="h-3 w-3" />
+                  )}
+                </Button>
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Collections
+                </h3>
+              </div>
               <Button
                 variant="ghost"
                 size="sm"
@@ -319,7 +353,8 @@ export function Sidebar({
               </Button>
             </div>
             
-            <div className="space-y-1">
+            {showCollections && (
+              <div className="space-y-1">
               {collections.map((collection) => (
                 <div key={collection.id} className="flex items-center group">
                   <Link href={`/collections/${collection.id}`} className="flex-1">
@@ -357,7 +392,8 @@ export function Sidebar({
                   </DropdownMenu>
                 </div>
               ))}
-            </div>
+              </div>
+            )}
           </div>
         </nav>
       </ScrollArea>

@@ -27,7 +27,10 @@ import {
   Plus, 
   List,
   Filter,
-  Menu
+  Menu,
+  ZoomIn,
+  ZoomOut,
+  Maximize2
 } from "lucide-react";
 
 interface Article {
@@ -59,6 +62,7 @@ export default function Articles() {
   const [filter, setFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"compact" | "normal" | "expanded">("normal");
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -331,6 +335,37 @@ export default function Articles() {
                 </SelectContent>
               </Select>
               
+              {/* View Mode Controls */}
+              <div className="flex items-center space-x-1 border rounded-md p-1">
+                <Button
+                  variant={viewMode === "compact" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("compact")}
+                  className="h-7 px-2"
+                  title="Vue compacte"
+                >
+                  <ZoomOut className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant={viewMode === "normal" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("normal")}
+                  className="h-7 px-2"
+                  title="Vue normale"
+                >
+                  <List className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant={viewMode === "expanded" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("expanded")}
+                  className="h-7 px-2"
+                  title="Vue étendue"
+                >
+                  <ZoomIn className="h-3 w-3" />
+                </Button>
+              </div>
+              
               <Button variant="ghost" size="sm">
                 <Filter className="h-4 w-4" />
               </Button>
@@ -340,7 +375,7 @@ export default function Articles() {
 
         {/* Article Feed */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-6 space-y-6">
+          <div className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 lg:space-y-6">
             {articlesLoading ? (
               <div className="text-center py-8">
                 <div className="text-muted-foreground">Loading articles...</div>
@@ -403,7 +438,7 @@ export default function Articles() {
                 </div>
                 
                 {filteredArticles.map((article) => (
-                  <ArticleCard key={article.id} article={article} />
+                  <ArticleCard key={article.id} article={article} viewMode={viewMode} />
                 ))}
                 
                 {/* Load More Button */}

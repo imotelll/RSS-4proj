@@ -223,7 +223,7 @@ export default function Dashboard() {
 
         {/* Article Feed */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
+          <div className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 lg:space-y-6">
             {articlesLoading ? (
               <div className="text-center py-8">
                 <div className="text-muted-foreground">Loading articles...</div>
