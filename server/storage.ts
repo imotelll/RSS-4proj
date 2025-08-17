@@ -87,11 +87,6 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getUserByGoogleId(googleId: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.googleId, googleId));
-    return user;
-  }
-
   async upsertUser(userData: UpsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
@@ -161,9 +156,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateFeed(id: number, updates: Partial<InsertFeed>): Promise<Feed> {
+    const updateData: any = { updatedAt: new Date() };
+    
+    // Only add defined fields to avoid type errors
+    if (updates.title !== undefined) updateData.title = updates.title;
+    if (updates.url !== undefined) updateData.url = updates.url;
+    if (updates.description !== undefined) updateData.description = updates.description;
+    if (updates.tags !== undefined) updateData.tags = updates.tags;
+    if (updates.active !== undefined) updateData.active = updates.active;
+    if (updates.fetchInterval !== undefined) updateData.fetchInterval = updates.fetchInterval;
+    if (updates.lastFetched !== undefined) updateData.lastFetched = updates.lastFetched;
+    if (updates.isPublic !== undefined) updateData.isPublic = updates.isPublic;
+    
     const [updatedFeed] = await db
       .update(feeds)
-      .set({ ...updates, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(feeds.id, id))
       .returning();
     return updatedFeed;
@@ -426,6 +433,7 @@ export class DatabaseStorage implements IStorage {
         lastFetched: feeds.lastFetched,
         fetchInterval: feeds.fetchInterval,
         ownerId: feeds.ownerId,
+        isPublic: feeds.isPublic,
         createdAt: feeds.createdAt,
         updatedAt: feeds.updatedAt,
       })
@@ -443,7 +451,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getArticleComments(articleId: number, collectionId?: number): Promise<(Comment & { user: User })[]> {
-    let query = db
+    let whereCondition = eq(comments.articleId, articleId);
+    
+    if (collectionId) {
+      whereCondition = and(whereCondition, eq(comments.collectionId, collectionId));
+    }
+
+    const result = await db
       .select({
         id: comments.id,
         articleId: comments.articleId,
@@ -456,13 +470,9 @@ export class DatabaseStorage implements IStorage {
       })
       .from(comments)
       .innerJoin(users, eq(comments.userId, users.id))
-      .where(eq(comments.articleId, articleId));
-
-    if (collectionId) {
-      query = query.where(eq(comments.collectionId, collectionId));
-    }
-
-    const result = await query.orderBy(desc(comments.createdAt));
+      .where(whereCondition)
+      .orderBy(desc(comments.createdAt));
+      
     return result as any;
   }
 
