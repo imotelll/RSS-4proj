@@ -15,9 +15,10 @@ import { apiRequest } from "@/lib/queryClient";
 
 interface SignUpFormProps {
   onSuccess?: () => void;
+  onSwitchToLogin?: () => void;
 }
 
-export default function SignUpForm({ onSuccess }: SignUpFormProps) {
+export default function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormProps) {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
 
@@ -110,7 +111,7 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
             <Button
               variant="link"
               className="p-0 h-auto text-primary"
-              onClick={() => window.location.href = "/api/login"}
+              onClick={onSwitchToLogin}
             >
               Sign in
             </Button>
@@ -268,7 +269,7 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
           <Button
             variant="link"
             className="p-0 h-auto text-primary"
-            onClick={() => window.location.href = "/api/login"}
+            onClick={onSwitchToLogin}
           >
             Sign in
           </Button>

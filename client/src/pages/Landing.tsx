@@ -3,15 +3,34 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Rss, Users, Search, Globe } from "lucide-react";
 import SignUpForm from "@/components/SignUpForm";
+import LoginForm from "@/components/LoginForm";
+
+type ViewMode = 'landing' | 'signup' | 'login';
 
 export default function Landing() {
-  const [showSignUp, setShowSignUp] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('landing');
 
-  if (showSignUp) {
+  if (viewMode === 'signup') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <SignUpForm onSuccess={() => setShowSignUp(false)} />
+          <SignUpForm 
+            onSuccess={() => setViewMode('landing')} 
+            onSwitchToLogin={() => setViewMode('login')}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (viewMode === 'login') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <LoginForm 
+            onSuccess={() => setViewMode('landing')} 
+            onSwitchToSignUp={() => setViewMode('signup')}
+          />
         </div>
       </div>
     );
@@ -37,7 +56,7 @@ export default function Landing() {
             <Button 
               size="lg" 
               className="text-lg px-8 py-4"
-              onClick={() => setShowSignUp(true)}
+              onClick={() => setViewMode('signup')}
             >
               Create Account
             </Button>
@@ -45,7 +64,7 @@ export default function Landing() {
               size="lg" 
               variant="outline"
               className="text-lg px-8 py-4"
-              onClick={() => window.location.href = "/api/login"}
+              onClick={() => setViewMode('login')}
             >
               Sign In
             </Button>
@@ -117,7 +136,7 @@ export default function Landing() {
                 <Button 
                   size="lg" 
                   className="text-lg px-8 py-4"
-                  onClick={() => setShowSignUp(true)}
+                  onClick={() => setViewMode('signup')}
                 >
                   Get Started for Free
                 </Button>
@@ -125,7 +144,7 @@ export default function Landing() {
                   size="lg" 
                   variant="outline"
                   className="text-lg px-8 py-4"
-                  onClick={() => window.location.href = "/api/login"}
+                  onClick={() => setViewMode('login')}
                 >
                   Sign In
                 </Button>
