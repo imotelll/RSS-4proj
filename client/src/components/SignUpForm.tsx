@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Loader2 } from "lucide-react";
 import { SiGoogle } from "react-icons/si";
+import { FaFacebook } from "react-icons/fa";
 import { registerUserSchema, type RegisterUser } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -67,6 +68,10 @@ export default function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormPro
     window.location.href = "/api/auth/google";
   };
 
+  const handleFacebookSignUp = () => {
+    window.location.href = "/api/auth/facebook";
+  };
+
   if (!showForm) {
     return (
       <Card className="w-full max-w-md mx-auto">
@@ -84,6 +89,15 @@ export default function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormPro
           >
             <SiGoogle className="mr-2 h-5 w-5" />
             Continue with Google
+          </Button>
+          
+          <Button
+            onClick={handleFacebookSignUp}
+            variant="outline"
+            className="w-full h-12 text-base"
+          >
+            <FaFacebook className="mr-2 h-5 w-5 text-blue-600" />
+            Continue with Facebook
           </Button>
           
           <div className="relative">
@@ -251,6 +265,15 @@ export default function SignUpForm({ onSuccess, onSwitchToLogin }: SignUpFormPro
           >
             <SiGoogle className="mr-2 h-5 w-5" />
             Continue with Google
+          </Button>
+          
+          <Button
+            onClick={handleFacebookSignUp}
+            variant="outline"
+            className="w-full h-12 text-base"
+          >
+            <FaFacebook className="mr-2 h-5 w-5 text-blue-600" />
+            Continue with Facebook
           </Button>
         </div>
 

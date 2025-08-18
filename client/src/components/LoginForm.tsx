@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { FaGoogle } from "react-icons/fa";
+import { FaGoogle, FaFacebook } from "react-icons/fa";
 import { SiReplit } from "react-icons/si";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -78,6 +78,10 @@ export default function LoginForm({ onSuccess, onSwitchToSignUp }: LoginFormProp
     window.location.href = "/api/auth/google";
   };
 
+  const handleFacebookLogin = () => {
+    window.location.href = "/api/auth/facebook";
+  };
+
   const handleReplitLogin = () => {
     window.location.href = "/api/login";
   };
@@ -111,6 +115,16 @@ export default function LoginForm({ onSuccess, onSwitchToSignUp }: LoginFormProp
           >
             <FaGoogle className="h-4 w-4 text-red-500" />
             Continue with Google
+          </Button>
+          
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full flex items-center gap-3"
+            onClick={handleFacebookLogin}
+          >
+            <FaFacebook className="h-4 w-4 text-blue-600" />
+            Continue with Facebook
           </Button>
         </div>
 
