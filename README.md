@@ -261,31 +261,6 @@ For issues and questions:
 - Verify environment variables
 - Ensure database connectivity
 
-## Changelog
-
-### Recent Updates
-- **August 19, 2025**: Project cleanup and Docker simplification
-  - Consolidated all documentation into single README.md
-  - Simplified Docker deployment with single container
-  - Added Facebook OAuth integration with UI components
-  - Updated environment configuration and examples
-  - Cleaned up redundant files and documentation
-
-- **January 18, 2025**: Multi-provider authentication system
-  - Email/password authentication with bcrypt hashing
-  - Google OAuth integration with account persistence
-  - Facebook OAuth with complete UI integration
-  - Unified authentication pages with all login options
-  - Confirmed user account persistence in PostgreSQL
-
-- **January 18, 2025**: Core features and real-time functionality
-  - Shared RSS feeds system between all users
-  - Automatic feed refresh service (30-minute intervals)
-  - Real-time statistics and counters
-  - Article favorites and read/unread tracking
-  - Responsive UI with dark/light theme support
-  - Health monitoring endpoints for Docker deployment
-
 ## License
 
 MIT License - see LICENSE file for details.
