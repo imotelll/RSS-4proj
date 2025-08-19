@@ -1,29 +1,29 @@
 # SUPRSS - Collaborative RSS Reader
 
-🚀 A modern, collaborative RSS feed reader that brings teams together around the content that matters most.
+A modern, collaborative RSS feed reader that brings teams together around the content that matters most.
 
 ## Features
 
-### 🔐 Multi-Provider Authentication
+### Multi-Provider Authentication
 - **Email Registration**: Create accounts with email and password
 - **Google OAuth**: Quick sign-in with Google accounts
 - **Facebook OAuth**: Sign-in with Facebook accounts  
 - **Replit Auth**: Native integration with Replit authentication
 
-### 📰 RSS Feed Management
+### RSS Feed Management
 - Subscribe to RSS feeds with automatic validation
 - Shared feeds accessible to all users
 - Auto-refresh feeds with configurable intervals
 - Tag-based organization and categorization
 - Real-time feed updates
 
-### 👥 Collaborative Features
+### Collaborative Features
 - Shared collections with role-based permissions
 - Real-time chat within collections
 - Article commenting and discussions
 - Member invitation and management
 
-### 📱 Article Management
+### Article Management
 - Read/unread tracking per user
 - Personal favorites system
 - Full-text search across articles
@@ -92,6 +92,45 @@ The application will be available at:
 ### 4. Initialize Database
 
 The database will be automatically migrated on first startup. Default RSS feeds are included for testing.
+
+## Project Architecture
+
+### System Overview
+SUPRSS is a full-stack web application built for scalability and modern development practices:
+
+- **Frontend**: React 18 with TypeScript, Vite build tooling, Tailwind CSS styling
+- **Backend**: Node.js Express server with TypeScript, WebSocket support
+- **Database**: PostgreSQL with Drizzle ORM for type-safe operations
+- **Authentication**: Multi-provider system supporting email, Google, Facebook, and Replit
+- **Real-time**: WebSocket connections for live updates and messaging
+
+### Key Components
+
+#### Authentication System
+- Multi-provider support with unified session management
+- bcrypt password hashing for email accounts
+- OAuth integration with Google and Facebook
+- PostgreSQL-backed sessions with configurable TTL
+- Mixed authentication middleware supporting all providers
+
+#### Feed Management System
+- RSS parser supporting multiple feed formats
+- Real-time URL validation before subscription
+- Automatic refresh with configurable intervals (default 30 minutes)
+- Shared feeds accessible to all users
+- Tag-based organization and categorization
+
+#### Real-time Features
+- WebSocket server for instant messaging
+- Live notifications for new articles and updates
+- Real-time collaboration in shared collections
+- Automatic reconnection with exponential backoff
+
+#### Data Architecture
+- PostgreSQL database with Drizzle ORM
+- Type-safe database operations with schema validation
+- Automatic migrations with drizzle-kit
+- Connection pooling for scalability
 
 ## Development Setup
 
@@ -221,6 +260,31 @@ For issues and questions:
 - Review logs in Docker containers
 - Verify environment variables
 - Ensure database connectivity
+
+## Changelog
+
+### Recent Updates
+- **August 19, 2025**: Project cleanup and Docker simplification
+  - Consolidated all documentation into single README.md
+  - Simplified Docker deployment with single container
+  - Added Facebook OAuth integration with UI components
+  - Updated environment configuration and examples
+  - Cleaned up redundant files and documentation
+
+- **January 18, 2025**: Multi-provider authentication system
+  - Email/password authentication with bcrypt hashing
+  - Google OAuth integration with account persistence
+  - Facebook OAuth with complete UI integration
+  - Unified authentication pages with all login options
+  - Confirmed user account persistence in PostgreSQL
+
+- **January 18, 2025**: Core features and real-time functionality
+  - Shared RSS feeds system between all users
+  - Automatic feed refresh service (30-minute intervals)
+  - Real-time statistics and counters
+  - Article favorites and read/unread tracking
+  - Responsive UI with dark/light theme support
+  - Health monitoring endpoints for Docker deployment
 
 ## License
 
