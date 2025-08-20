@@ -141,7 +141,7 @@ export class DatabaseStorage implements IStorage {
 
   // Feed operations
   async createFeed(feed: InsertFeed): Promise<Feed> {
-    const [newFeed] = await db.insert(feeds).values([feed]).returning();
+    const [newFeed] = await db.insert(feeds).values(feed).returning();
     return newFeed;
   }
 
