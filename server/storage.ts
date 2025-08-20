@@ -199,6 +199,50 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(articles.publishedAt));
   }
 
+  // Optimisation : récupérer les stats d'un feed en une seule requête
+  async getFeedStats(userId: string, feedId: number): Promise<{
+    feedId: number;
+    title: string;
+    total: number;
+    unread: number;
+    favorites: number;
+    read: number;
+  }> {
+    // Récupérer le feed
+    const feed = await db.select().from(feeds).where(eq(feeds.id, feedId)).limit(1);
+    if (feed.length === 0) {
+      throw new Error('Feed not found');
+    }
+
+    // Compter les articles avec une requête optimisée
+    const stats = await db
+      .select({
+        total: sql<number>`COUNT(*)`,
+        read: sql<number>`COUNT(CASE WHEN ${userArticles.read} = true THEN 1 END)`,
+        favorites: sql<number>`COUNT(CASE WHEN ${userArticles.favorite} = true THEN 1 END)`,
+      })
+      .from(articles)
+      .leftJoin(userArticles, 
+        sql`${articles.id} = ${userArticles.articleId} AND ${userArticles.userId} = ${userId}`
+      )
+      .where(eq(articles.feedId, feedId));
+
+    const result = stats[0];
+    const total = result.total || 0;
+    const read = result.read || 0;
+    const favorites = result.favorites || 0;
+    const unread = total - read;
+
+    return {
+      feedId: feedId,
+      title: feed[0].title,
+      total,
+      unread,
+      favorites,
+      read
+    };
+  }
+
   async getUserArticles(
     userId: string,
     limit = 20,

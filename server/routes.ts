@@ -1,6 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { db } from "./db";
+import { sql, eq } from "drizzle-orm";
+import { articles, userArticles, feeds } from "@shared/schema";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import passport from "./auth"; // Import passport configuration
 import { registerUserSchema } from "@shared/schema";
@@ -240,31 +243,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const feedStats = await Promise.all(feeds.map(async (feed) => {
         try {
           console.log(`[FEEDS/STATS] Processing feed ${feed.id} (${feed.title})`);
-          const feedArticles = await storage.getArticlesByFeed(feed.id);
-          const total = feedArticles.length;
-          console.log(`[FEEDS/STATS] Feed ${feed.id}: Found ${total} articles`);
+          // Utiliser la nouvelle méthode optimisée
+          const stats = await storage.getFeedStats(userId, feed.id);
+          console.log(`[FEEDS/STATS] Feed ${feed.title}: ${stats.total} total, ${stats.unread} unread, ${stats.favorites} favorites, ${stats.read} read`);
           
-          // Compter directement les articles lus/non lus pour ce flux spécifique
-          const userArticleData = await Promise.all(
-            feedArticles.map(async (article) => {
-              return await storage.getUserArticleData(userId, article.id);
-            })
-          );
-          
-          const unread = userArticleData.filter(data => !data?.read).length;
-          const favorites = userArticleData.filter(data => data?.favorite).length;
-          const read = userArticleData.filter(data => data?.read).length;
-          
-          console.log(`[FEEDS/STATS] Feed ${feed.title}: ${total} total, ${unread} unread, ${favorites} favorites, ${read} read`);
-          
-          return {
-            feedId: feed.id,
-            title: feed.title,
-            total,
-            unread,
-            favorites,
-            read
-          };
+          return stats;
         } catch (feedError) {
           console.error(`[FEEDS/STATS] Error getting stats for feed ${feed.id}:`, feedError);
           return {
@@ -434,22 +417,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/stats', isAuthenticatedMixed, async (req: any, res) => {
     try {
       const userId = req.user.claims?.sub || req.user.id;
+      console.log(`[STATS] Getting global stats for user ${userId}`);
       
-      // Compter tous les articles publics (augmenter la limite)
-      const allArticles = await storage.getUserArticles(userId, 100000, 0);
-      const totalArticles = allArticles.length;
-      
-      // Compter les articles non lus
-      const unreadArticles = allArticles.filter(article => !article.userArticle?.read).length;
-      
-      // Compter les favoris de l'utilisateur
-      const favoriteArticles = allArticles.filter(article => article.userArticle?.favorite).length;
+      // Requête optimisée pour récupérer toutes les statistiques en une fois
+      const stats = await db
+        .select({
+          totalArticles: sql<number>`COUNT(*)`,
+          readArticles: sql<number>`COUNT(CASE WHEN ${userArticles.read} = true THEN 1 END)`,
+          favoriteArticles: sql<number>`COUNT(CASE WHEN ${userArticles.favorite} = true THEN 1 END)`,
+        })
+        .from(articles)
+        .leftJoin(userArticles, 
+          sql`${articles.id} = ${userArticles.articleId} AND ${userArticles.userId} = ${userId}`
+        );
+
+      const result = stats[0];
+      const totalArticles = result.totalArticles || 0;
+      const readArticles = result.readArticles || 0;
+      const favoriteArticles = result.favoriteArticles || 0;
+      const unreadArticles = totalArticles - readArticles;
+
+      console.log(`[STATS] Global stats: ${totalArticles} total, ${unreadArticles} unread, ${favoriteArticles} favorites`);
       
       res.json({
         totalArticles,
         unreadArticles,
         favoriteArticles,
-        readArticles: totalArticles - unreadArticles
+        readArticles
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
