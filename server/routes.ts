@@ -218,6 +218,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Route pour les statistiques par flux - DOIT être AVANT /api/feeds/:id
+  app.get('/api/feeds/stats', isAuthenticatedMixed, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      console.log(`[FEEDS/STATS] User ID: ${userId}, User object:`, req.user);
+      
+      if (!userId) {
+        console.error('[FEEDS/STATS] No user ID found');
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+
+      const feeds = await storage.getUserFeeds(userId);
+      console.log(`[FEEDS/STATS] Getting stats for ${feeds.length} feeds for user ${userId}`);
+      
+      if (feeds.length === 0) {
+        console.log('[FEEDS/STATS] No feeds found for user, returning empty array');
+        return res.json([]);
+      }
+
+      const feedStats = await Promise.all(feeds.map(async (feed) => {
+        try {
+          console.log(`[FEEDS/STATS] Processing feed ${feed.id} (${feed.title})`);
+          const feedArticles = await storage.getArticlesByFeed(feed.id);
+          const total = feedArticles.length;
+          console.log(`[FEEDS/STATS] Feed ${feed.id}: Found ${total} articles`);
+          
+          // Compter directement les articles lus/non lus pour ce flux spécifique
+          const userArticleData = await Promise.all(
+            feedArticles.map(async (article) => {
+              return await storage.getUserArticleData(userId, article.id);
+            })
+          );
+          
+          const unread = userArticleData.filter(data => !data?.read).length;
+          const favorites = userArticleData.filter(data => data?.favorite).length;
+          const read = userArticleData.filter(data => data?.read).length;
+          
+          console.log(`[FEEDS/STATS] Feed ${feed.title}: ${total} total, ${unread} unread, ${favorites} favorites, ${read} read`);
+          
+          return {
+            feedId: feed.id,
+            title: feed.title,
+            total,
+            unread,
+            favorites,
+            read
+          };
+        } catch (feedError) {
+          console.error(`[FEEDS/STATS] Error getting stats for feed ${feed.id}:`, feedError);
+          return {
+            feedId: feed.id,
+            title: feed.title,
+            total: 0,
+            unread: 0,
+            favorites: 0,
+            read: 0
+          };
+        }
+      }));
+      
+      console.log(`[FEEDS/STATS] Returning stats for ${feedStats.length} feeds`);
+      res.json(feedStats);
+    } catch (error) {
+      console.error("[FEEDS/STATS] Error fetching feed stats:", error);
+      res.status(500).json({ message: "Failed to fetch feed stats" });
+    }
+  });
+
   app.get('/api/feeds/:id', isAuthenticatedMixed, async (req: any, res) => {
     try {
       const userId = req.user.claims?.sub || req.user.id;
@@ -389,59 +457,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Route pour les statistiques par flux
-  app.get('/api/feeds/stats', isAuthenticatedMixed, async (req: any, res) => {
-    try {
-      const userId = req.user.claims?.sub || req.user.id;
-      const feeds = await storage.getUserFeeds(userId);
-      
-      console.log(`Getting stats for ${feeds.length} feeds for user ${userId}`);
-      
-      const feedStats = await Promise.all(feeds.map(async (feed) => {
-        try {
-          const feedArticles = await storage.getArticlesByFeed(feed.id);
-          const total = feedArticles.length;
-          
-          // Compter directement les articles lus/non lus pour ce flux spécifique
-          const userArticleData = await Promise.all(
-            feedArticles.map(async (article) => {
-              return await storage.getUserArticleData(userId, article.id);
-            })
-          );
-          
-          const unread = userArticleData.filter(data => !data?.read).length;
-          const favorites = userArticleData.filter(data => data?.favorite).length;
-          const read = userArticleData.filter(data => data?.read).length;
-          
-          console.log(`Feed ${feed.title}: ${total} total, ${unread} unread, ${favorites} favorites, ${read} read`);
-          
-          return {
-            feedId: feed.id,
-            title: feed.title,
-            total,
-            unread,
-            favorites,
-            read
-          };
-        } catch (feedError) {
-          console.error(`Error getting stats for feed ${feed.id}:`, feedError);
-          return {
-            feedId: feed.id,
-            title: feed.title,
-            total: 0,
-            unread: 0,
-            favorites: 0,
-            read: 0
-          };
-        }
-      }));
-      
-      res.json(feedStats);
-    } catch (error) {
-      console.error("Error fetching feed stats:", error);
-      res.status(500).json({ message: "Failed to fetch feed stats" });
-    }
-  });
 
   app.get('/api/articles/search', isAuthenticatedMixed, async (req: any, res) => {
     try {
