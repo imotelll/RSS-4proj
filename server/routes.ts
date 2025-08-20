@@ -680,7 +680,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         version: '1.0.0',
         database: 'connected'
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Health check failed:', error);
       res.status(503).json({ 
         status: 'error', 
