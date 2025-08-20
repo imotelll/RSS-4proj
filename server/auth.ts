@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import { Strategy as FacebookStrategy } from "passport-facebook";
 import { storage } from "./storage";
 import type { User } from "@shared/schema";
 
@@ -86,63 +85,6 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   ));
 }
 
-// Configure Facebook strategy only if credentials are available
-if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
-  passport.use(new FacebookStrategy(
-    {
-      clientID: process.env.FACEBOOK_APP_ID,
-      clientSecret: process.env.FACEBOOK_APP_SECRET,
-      callbackURL: process.env.FACEBOOK_CALLBACK_URL || `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://localhost:5000/api/auth/facebook/callback`,
-      profileFields: ['id', 'first_name', 'last_name', 'email', 'picture']
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        console.log('Facebook OAuth callback - Profile ID:', profile.id);
-        
-        // Check if user exists by Facebook ID first, then by email
-        let user = await storage.getUserByFacebookId(profile.id);
-        
-        if (!user) {
-          // Check by email if no Facebook ID match
-          user = await storage.getUserByEmail(profile.emails?.[0]?.value || '');
-          
-          if (user) {
-            // Update existing user with Facebook info
-            console.log('Updating existing user with Facebook ID:', profile.id);
-            user = await storage.upsertUser({
-              ...user,
-              authProvider: 'facebook',
-              facebookId: profile.id,
-              profileImageUrl: profile.photos?.[0]?.value,
-              emailVerified: true,
-            });
-          }
-        }
-        
-        if (!user) {
-          // Create new user from Facebook profile
-          console.log('Creating new Facebook user with ID:', profile.id);
-          user = await storage.createUser({
-            email: profile.emails?.[0]?.value || '',
-            firstName: profile.name?.givenName || '',
-            lastName: profile.name?.familyName || '',
-            profileImageUrl: profile.photos?.[0]?.value,
-            authProvider: 'facebook',
-            facebookId: profile.id,
-            emailVerified: true,
-          });
-          console.log('Created new Facebook user:', user.id);
-        } else {
-          console.log('Found existing Facebook user:', user.id);
-        }
-        
-        return done(null, user);
-      } catch (error) {
-        return done(error);
-      }
-    }
-  ));
-}
 
 // Serialize/deserialize user for session
 passport.serializeUser((user: any, done) => {

@@ -112,26 +112,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }
 
-  // Facebook OAuth routes
-  if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
-    app.get('/api/auth/facebook', 
-      passport.authenticate('facebook', { scope: ['email'] })
-    );
-
-    app.get('/api/auth/facebook/callback',
-      passport.authenticate('facebook', { failureRedirect: '/' }),
-      (req, res) => {
-        // Successful authentication, redirect to dashboard
-        res.redirect('/dashboard');
-      }
-    );
-  } else {
-    app.get('/api/auth/facebook', (req, res) => {
-      res.status(503).json({ 
-        message: 'Facebook OAuth not configured. Please set FACEBOOK_APP_ID and FACEBOOK_APP_SECRET environment variables.' 
-      });
-    });
-  }
 
   // Middleware to handle both Replit and local authentication
   const isAuthenticatedMixed = async (req: any, res: any, next: any) => {

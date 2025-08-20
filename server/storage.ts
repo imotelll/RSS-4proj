@@ -32,7 +32,6 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByGoogleId(googleId: string): Promise<User | undefined>;
-  getUserByFacebookId(facebookId: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   createUser(user: Omit<UpsertUser, 'id'> & { password?: string }): Promise<User>;
   verifyPassword(email: string, password: string): Promise<User | null>;
@@ -88,10 +87,6 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getUserByFacebookId(facebookId: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.facebookId, facebookId));
-    return user;
-  }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
     const [user] = await db
