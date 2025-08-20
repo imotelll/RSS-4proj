@@ -223,6 +223,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims?.sub || req.user.id;
       const feedId = parseInt(req.params.id);
       
+      if (isNaN(feedId)) {
+        return res.status(400).json({ message: "Invalid feed ID" });
+      }
+      
       const feed = await storage.getFeed(feedId);
       if (!feed) {
         return res.status(404).json({ message: "Feed not found" });
@@ -244,6 +248,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims?.sub || req.user.id;
       const feedId = parseInt(req.params.id);
+      
+      if (isNaN(feedId)) {
+        return res.status(400).json({ message: "Invalid feed ID" });
+      }
       
       const feed = await storage.getFeed(feedId);
       if (!feed) {
