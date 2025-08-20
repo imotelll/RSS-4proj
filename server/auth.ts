@@ -88,22 +88,29 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 
 // Serialize/deserialize user for session
 passport.serializeUser((user: any, done) => {
-  // Sérialiser l'ID utilisateur pour la session
-  done(null, user.id);
+  // Pour les utilisateurs Replit Auth, l'ID est dans user.claims.sub
+  // Pour les utilisateurs locaux/Google, l'ID est dans user.id
+  const userId = user.claims?.sub || user.id;
+  console.log('Serializing user with ID:', userId);
+  done(null, userId);
 });
 
 passport.deserializeUser(async (id: string, done) => {
   try {
-    // Récupérer l'utilisateur complet depuis la base de données
+    console.log('Deserializing user with ID:', id);
+    
+    // Récupérer l'utilisateur depuis la base de données
     const user = await storage.getUser(id);
     if (!user) {
       console.log('User not found during deserialization, ID:', id);
-      return done(null, false); // Ne pas générer d'erreur, juste retourner false
+      return done(null, false);
     }
+    
+    console.log('Successfully deserialized user:', user.email);
     done(null, user);
   } catch (error) {
     console.error('Error deserializing user:', error);
-    done(null, false); // Ne pas générer d'erreur, juste retourner false
+    done(null, false);
   }
 });
 

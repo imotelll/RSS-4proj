@@ -57,12 +57,14 @@ function updateUserSession(
 async function upsertUser(
   claims: any,
 ) {
+  console.log('Upserting Replit user with claims:', claims);
   await storage.upsertUser({
     id: claims["sub"],
     email: claims["email"],
     firstName: claims["first_name"],
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
+    authProvider: 'replit',
   });
 }
 
@@ -98,8 +100,7 @@ export async function setupAuth(app: Express) {
     passport.use(strategy);
   }
 
-  passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
+  // Ne pas redéfinir la sérialisation ici, elle est déjà définie dans auth.ts
 
   app.get("/api/login", (req, res, next) => {
     passport.authenticate(`replitauth:${req.hostname}`, {
