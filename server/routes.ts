@@ -398,30 +398,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Getting stats for ${feeds.length} feeds for user ${userId}`);
       
       const feedStats = await Promise.all(feeds.map(async (feed) => {
-        const feedArticles = await storage.getArticlesByFeed(feed.id);
-        const total = feedArticles.length;
-        
-        // Compter directement les articles lus/non lus pour ce flux spécifique
-        const userArticleData = await Promise.all(
-          feedArticles.map(async (article) => {
-            return await storage.getUserArticleData(userId, article.id);
-          })
-        );
-        
-        const unread = userArticleData.filter(data => !data?.read).length;
-        const favorites = userArticleData.filter(data => data?.favorite).length;
-        const read = userArticleData.filter(data => data?.read).length;
-        
-        console.log(`Feed ${feed.title}: ${total} total, ${unread} unread, ${favorites} favorites, ${read} read`);
-        
-        return {
-          feedId: feed.id,
-          title: feed.title,
-          total,
-          unread,
-          favorites,
-          read
-        };
+        try {
+          const feedArticles = await storage.getArticlesByFeed(feed.id);
+          const total = feedArticles.length;
+          
+          // Compter directement les articles lus/non lus pour ce flux spécifique
+          const userArticleData = await Promise.all(
+            feedArticles.map(async (article) => {
+              return await storage.getUserArticleData(userId, article.id);
+            })
+          );
+          
+          const unread = userArticleData.filter(data => !data?.read).length;
+          const favorites = userArticleData.filter(data => data?.favorite).length;
+          const read = userArticleData.filter(data => data?.read).length;
+          
+          console.log(`Feed ${feed.title}: ${total} total, ${unread} unread, ${favorites} favorites, ${read} read`);
+          
+          return {
+            feedId: feed.id,
+            title: feed.title,
+            total,
+            unread,
+            favorites,
+            read
+          };
+        } catch (feedError) {
+          console.error(`Error getting stats for feed ${feed.id}:`, feedError);
+          return {
+            feedId: feed.id,
+            title: feed.title,
+            total: 0,
+            unread: 0,
+            favorites: 0,
+            read: 0
+          };
+        }
       }));
       
       res.json(feedStats);
