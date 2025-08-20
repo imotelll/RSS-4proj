@@ -292,7 +292,7 @@ export function Sidebar({
             {showMyFeeds && (
               <div className="space-y-1">
               {feeds.map((feed) => {
-                const feedStat = feedStats.find((stat) => stat.feedId === feed.id);
+                const feedStat = feedStats?.find((stat) => stat.feedId === feed.id);
                 const unreadCount = feedStat?.unread || 0;
                 
                 return (

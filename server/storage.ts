@@ -515,6 +515,31 @@ export class DatabaseStorage implements IStorage {
     // Finally delete the collection itself
     await db.delete(collections).where(eq(collections.id, id));
   }
+
+  // Supprimer les articles de plus d'une semaine
+  async cleanupOldArticles(): Promise<number> {
+    try {
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+      // D'abord, supprimer les données utilisateur liées aux articles anciens
+      await db.delete(userArticles)
+        .where(
+          sql`article_id IN (SELECT id FROM articles WHERE published_at < ${oneWeekAgo.toISOString()})`
+        );
+
+      // Ensuite, supprimer les articles anciens
+      const result = await db.delete(articles)
+        .where(sql`published_at < ${oneWeekAgo.toISOString()}`);
+
+      const deletedCount = result.rowCount || 0;
+      console.log(`Cleaned up ${deletedCount} articles older than ${oneWeekAgo.toISOString()}`);
+      return deletedCount;
+    } catch (error) {
+      console.error('Error cleaning up old articles:', error);
+      throw error;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

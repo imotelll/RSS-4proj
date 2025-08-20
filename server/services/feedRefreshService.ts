@@ -106,6 +106,17 @@ class FeedRefreshService {
         }
       }
       
+      // Nettoyer les articles anciens après le rafraîchissement
+      try {
+        console.log('Cleaning up articles older than 7 days...');
+        const cleanedCount = await storage.cleanupOldArticles();
+        if (cleanedCount > 0) {
+          console.log(`Cleanup complete: ${cleanedCount} old articles removed`);
+        }
+      } catch (error) {
+        console.error('Error during article cleanup:', error);
+      }
+
       if (totalNewArticles > 0) {
         console.log(`Auto-refresh complete: ${totalNewArticles} new articles from ${refreshedFeeds} feeds`);
       } else {
