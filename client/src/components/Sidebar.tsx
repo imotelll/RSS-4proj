@@ -81,12 +81,24 @@ export function Sidebar({
     queryKey: ["/api/collections"],
   });
 
-  const { data: stats = { totalArticles: 0, unreadArticles: 0, favoriteArticles: 0, readArticles: 0 } } = useQuery({
+  const { data: stats = { totalArticles: 0, unreadArticles: 0, favoriteArticles: 0, readArticles: 0 } } = useQuery<{
+    totalArticles: number;
+    unreadArticles: number; 
+    favoriteArticles: number;
+    readArticles: number;
+  }>({
     queryKey: ["/api/stats"],
     refetchInterval: 30000, // Mise à jour toutes les 30 secondes
   });
 
-  const { data: feedStats = [] } = useQuery({
+  const { data: feedStats = [] } = useQuery<{
+    feedId: number;
+    title: string;
+    total: number;
+    unread: number;
+    favorites: number; 
+    read: number;
+  }[]>({
     queryKey: ["/api/feeds/stats"],
     refetchInterval: 30000, // Mise à jour toutes les 30 secondes
   });
@@ -280,7 +292,7 @@ export function Sidebar({
             {showMyFeeds && (
               <div className="space-y-1">
               {feeds.map((feed) => {
-                const feedStat = feedStats?.find((stat: any) => stat.feedId === feed.id);
+                const feedStat = feedStats.find((stat) => stat.feedId === feed.id);
                 const unreadCount = feedStat?.unread || 0;
                 
                 return (
@@ -412,7 +424,7 @@ export function Sidebar({
               {user?.firstName} {user?.lastName}
             </p>
             <p className="text-xs text-muted-foreground truncate">
-              {user?.email}
+              {(user as any)?.email}
             </p>
           </div>
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">

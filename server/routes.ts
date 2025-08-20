@@ -367,8 +367,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims?.sub || req.user.id;
       
-      // Compter tous les articles publics
-      const allArticles = await storage.getUserArticles(userId, 1000, 0);
+      // Compter tous les articles publics (augmenter la limite)
+      const allArticles = await storage.getUserArticles(userId, 100000, 0);
       const totalArticles = allArticles.length;
       
       // Compter les articles non lus
