@@ -141,7 +141,12 @@ export class DatabaseStorage implements IStorage {
 
   // Feed operations
   async createFeed(feed: InsertFeed): Promise<Feed> {
-    const [newFeed] = await db.insert(feeds).values([feed]).returning();
+    // Fix typing issue with tags field
+    const feedData = {
+      ...feed,
+      tags: feed.tags || [],
+    };
+    const [newFeed] = await db.insert(feeds).values(feedData).returning();
     return newFeed;
   }
 
