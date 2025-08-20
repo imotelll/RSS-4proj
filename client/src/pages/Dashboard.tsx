@@ -100,14 +100,31 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar 
-        onAddFeed={() => setShowAddFeed(true)}
-        onCreateCollection={() => setShowCreateCollection(true)}
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
+      {/* Sidebar - réduite sur desktop */}
+      <div className="hidden lg:block w-64 xl:w-72">
+        <Sidebar 
+          onAddFeed={() => setShowAddFeed(true)}
+          onCreateCollection={() => setShowCreateCollection(true)}
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+        />
+      </div>
       
-      <main className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 bg-black/50" onClick={() => setIsSidebarOpen(false)}>
+          <div className="w-64 h-full bg-background" onClick={(e) => e.stopPropagation()}>
+            <Sidebar 
+              onAddFeed={() => setShowAddFeed(true)}
+              onCreateCollection={() => setShowCreateCollection(true)}
+              isOpen={isSidebarOpen}
+              onClose={() => setIsSidebarOpen(false)}
+            />
+          </div>
+        </div>
+      )}
+      
+      <main className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header */}
         <header className="bg-card border-b border-border px-4 lg:px-6 py-4">
           <div className="flex items-center justify-between">
@@ -223,7 +240,7 @@ export default function Dashboard() {
 
         {/* Article Feed */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 lg:space-y-6">
+          <div className="p-4 lg:p-6 max-w-4xl mx-auto space-y-4 lg:space-y-6">
             {articlesLoading ? (
               <div className="text-center py-8">
                 <div className="text-muted-foreground">Loading articles...</div>

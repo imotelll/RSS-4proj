@@ -199,21 +199,9 @@ export function Sidebar({
 
   return (
     <>
-      {/* Mobile Overlay */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden" 
-          onClick={onClose}
-        />
-      )}
       
       {/* Sidebar */}
-      <aside className={`
-        fixed lg:static inset-y-0 left-0 z-50 
-        w-64 bg-card border-r border-border flex flex-col
-        transform transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
+      <aside className="w-full h-full bg-card border-r border-border flex flex-col">
       {/* Logo and Brand */}
       <div className="p-6 border-b border-border">
         <div className="flex items-center space-x-3">
