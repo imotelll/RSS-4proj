@@ -141,7 +141,7 @@ export class DatabaseStorage implements IStorage {
 
   // Feed operations
   async createFeed(feed: InsertFeed): Promise<Feed> {
-    const [newFeed] = await db.insert(feeds).values(feed).returning();
+    const [newFeed] = await db.insert(feeds).values([feed]).returning();
     return newFeed;
   }
 
@@ -460,7 +460,7 @@ export class DatabaseStorage implements IStorage {
     let whereCondition = eq(comments.articleId, articleId);
     
     if (collectionId) {
-      whereCondition = and(whereCondition, eq(comments.collectionId, collectionId));
+      whereCondition = and(whereCondition, eq(comments.collectionId, collectionId)) as any;
     }
 
     const result = await db
